@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><style>body{margin:0}[hidden]{display:none!important}</style></head><body><title>Quiz de Concursos Piloto</title>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'"><meta name="referrer" content="no-referrer"><title>Quiz de Concursos Piloto</title><style>body{margin:0}[hidden]{display:none!important}</style></head><body>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Layout: uma tela de app, coluna única centrada de até 560px. Cápsula de vidro no topo (botão | 3 números | botão),
@@ -214,7 +214,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
         <button type="button" data-tema="dark">Escuro</button>
       </div>
       <p class="aviso centro" id="nuvem">Verificando onde o progresso será guardado…</p>
-      <div class="dev" id="dev">
+      <div class="dev" id="dev" hidden>
         <b>Só para testes</b>
         <span class="aviso" id="devInfo"></span>
         <div class="par">
@@ -236,7 +236,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
         <div class="grande" id="lAcertos">0</div>
         <div class="aviso" id="lTexto"></div>
       </div>
-      <div class="cartao vidro">
+      <div class="cartao vidro" id="cartaoAd">
         <b>Quer continuar?</b>
         <span class="aviso">Assista a um anúncio de 30 segundos e libere mais 20 perguntas. No piloto, o anúncio é só uma contagem, para testar o ritmo.</span>
       </div>
@@ -262,20 +262,31 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
 <script>
 (function () {
   'use strict';
-  var LIM = 50, BONUS = 20, AD_S = 30, REVER_MIN = 10, DESCANSO_MIN = 14 * 1440, CURTA = 250;
+  var LIM = 50, BONUS = 20, AD_S = 30, REVER_MIN = 10, DESCANSO_MIN = 14 * 1440, CURTA = 250, TENTATIVAS = 3;
   var $ = function (id) { return document.getElementById(id); };
   var LETRAS = ['A', 'B', 'C', 'D'];
   function hoje() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  var falhaGravacao = false, avisouGravacao = false;
+  var aoFalharGravacao = function () { falhaGravacao = true; };
   var ls = {
     get: function (k) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
-    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { aoFalharGravacao(); return false; } }
   };
   function novoEstado() {
-    return { v: 1, dia: hoje(), feitas: 0, bonus: 0, certasHoje: 0, seq: 0, melhor: 0, total: 0, certas: 0, niv: {}, jan: {}, sel: null, rapido: false, vibra: true, tema: 'auto', flags: [], atualizado: 0, zerado: 0 };
+    return { v: 1, dia: hoje(), feitas: 0, bonus: 0, adPago: false, certasHoje: 0, seq: 0, melhor: 0, total: 0, certas: 0, niv: {}, jan: {}, sel: null, rapido: false, vibra: true, tema: 'auto', flags: [], atualizado: 0, zerado: 0 };
   }
-  var MAN = null, NOME = {}, POOL = {}, pedidos = {}, baixando = 0, fila = [];
+  /* no máximo um bônus de +20 por dia local; o flag fica no mesmo estado já gravado */
+  function normalizarBonus() {
+    var antes = (Number(S.bonus) || 0) + ':' + !!S.adPago;
+    if (Number(S.bonus) > 0) S.adPago = true;
+    S.adPago = !!S.adPago;
+    S.bonus = S.adPago ? BONUS : 0;
+    return antes !== (S.bonus + ':' + S.adPago);
+  }
+  var MAN = null, NOME = {}, POOL = {}, pedidos = {}, pacoteOk = {}, idsVistos = {}, baixando = 0, fila = [], retriesPend = 0, epoca = 0, tentMan = 0;
   var S = Object.assign(novoEstado(), ls.get('cq1-estado') || {}); delete S.auto; delete S.fita;
-  var H = {}, atual = null, prox = null, respondida = false, recFam = [], tela = 'tJogo', adFim = 0, adPago = false;
+  if (normalizarBonus()) ls.set('cq1-estado', S);
+  var H = {}, atual = null, prox = null, respondida = false, recFam = [], tela = 'tJogo', adFim = 0, acaoProx = null;
   var tResp = 0, tDown = 0, xDown = 0, yDown = 0, pend = null;
 
   /* elementos fixos: nada é recriado a cada pergunta */
@@ -283,7 +294,27 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   var elAlt = Array.prototype.slice.call(elAlts.children), elTxt = elAlt.map(function (b) { return b.lastElementChild; });
   var elPts = Array.prototype.slice.call($('mNiv').children);
 
-  function viraDia() { if (S.dia !== hoje()) { S.dia = hoje(); S.feitas = 0; S.bonus = 0; S.certasHoje = 0; } }
+  function viraDia() {
+    if (S.dia === hoje()) return false;
+    S.dia = hoje(); S.feitas = 0; S.bonus = 0; S.adPago = false; S.certasHoje = 0;
+    salvarLocal();
+    return true;
+  }
+  /* meia-noite nas telas de limite e de anúncio: volta ao quiz com o contador novo */
+  function checarDia() {
+    if (!viraDia()) return false;
+    placar();
+    if (tela === 'tLim' || tela === 'tAd') {
+      clearInterval(tAd); tAd = null; adFim = 0;
+      proxima();
+      return true;
+    }
+    if (respondida && atual) {
+      elProx.setAttribute('aria-disabled', 'false');
+      elProx.textContent = (S.feitas >= LIM + S.bonus) ? 'Ver resultado de hoje' : 'Próxima';
+    }
+    return true;
+  }
   function selecionadas() { return (S.sel && S.sel.length) ? S.sel : (MAN ? MAN.disciplinas.map(function (d) { return d.codigo; }) : []); }
   function hist(d) { if (!H[d]) H[d] = ls.get('cq1-h-' + d) || {}; return H[d]; }
 
@@ -332,27 +363,100 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   document.addEventListener('pointerup', soltarHap, true);
 
   /* ---------- pacotes ---------- */
+  function cargaAtiva() { return baixando > 0 || fila.length > 0 || retriesPend > 0; }
+  function temPerguntas() {
+    var sel = selecionadas();
+    for (var i = 0; i < sel.length; i++) if (POOL[sel[i]] && POOL[sel[i]].length) return true;
+    return false;
+  }
+  function temCurta() {
+    var sel = selecionadas();
+    for (var i = 0; i < sel.length; i++) {
+      var pool = POOL[sel[i]] || [];
+      for (var j = 0; j < pool.length; j++) if (pool[j].tam <= CURTA) return true;
+    }
+    return false;
+  }
+  function itemValido(l, vistosArquivo) {
+    if (!Array.isArray(l) || l.length < 6) return false;
+    var id = l[0];
+    if (id === null || id === undefined || id === '') return false;
+    var sid = String(id);
+    if (vistosArquivo[sid] || idsVistos[sid]) return false;
+    if (typeof l[3] !== 'string' || !l[3].trim()) return false;
+    if (!Array.isArray(l[4]) || l[4].length !== 4) return false;
+    for (var i = 0; i < 4; i++) if (typeof l[4][i] !== 'string' || !l[4][i].trim()) return false;
+    if (l[5] !== 0 && l[5] !== 1 && l[5] !== 2 && l[5] !== 3) return false;
+    vistosArquivo[sid] = 1;
+    return true;
+  }
+  /* o arquivo só entra no banco se todos os itens forem válidos; senão, nada dele é aproveitado */
+  function aceitarPacote(disc, nome, linhas) {
+    if (!Array.isArray(linhas) || !linhas.length) return false;
+    var vistos = {}, prep = [];
+    for (var i = 0; i < linhas.length; i++) {
+      var l = linhas[i];
+      if (!itemValido(l, vistos)) return false;
+      var e = l[6] == null ? '' : String(l[6]);
+      var tam = l[3].length + l[4].join('').length;
+      prep.push({ id: l[0], t: l[1], n: l[2], q: l[3], a: l[4], c: l[5], e: e.charAt(0).toUpperCase() + e.slice(1), f: l[7], d: disc, tam: tam });
+    }
+    var arr = POOL[disc] || (POOL[disc] = []);
+    prep.forEach(function (q) { idsVistos[String(q.id)] = 1; arr.push(q); });
+    pacoteOk[nome] = 1;
+    return true;
+  }
   function montarFila() {
+    if (!MAN) return;
     var sel = selecionadas(), porD = {}, max = 0;
     MAN.disciplinas.forEach(function (d) { if (sel.indexOf(d.codigo) >= 0) { porD[d.codigo] = d.arquivos.filter(function (a) { return !pedidos[a]; }); max = Math.max(max, porD[d.codigo].length); } });
     var ordem = Object.keys(porD).sort(function () { return Math.random() - 0.5; });
-    for (var i = 0; i < max; i++) ordem.forEach(function (c) { if (porD[c][i]) { pedidos[porD[c][i]] = 1; fila.push([c, porD[c][i]]); } });
+    for (var i = 0; i < max; i++) ordem.forEach(function (c) { if (porD[c][i]) { pedidos[porD[c][i]] = 1; fila.push([c, porD[c][i], 1]); } });
     bombear();
   }
   function bombear() {
-    while (baixando < 2 && fila.length) (function (item) {
-      baixando++;
-      fetch('pacotes/' + item[1]).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (linhas) {
-        var arr = POOL[item[0]] || (POOL[item[0]] = []);
-        linhas.forEach(function (l) {
-          var tam = l[3].length + l[4].join('').length, e = l[6] || '';
-          arr.push({ id: l[0], t: l[1], n: l[2], q: l[3], a: l[4], c: l[5], e: e.charAt(0).toUpperCase() + e.slice(1), f: l[7], d: item[0], tam: tam });
-        });
-      }).catch(function () { delete pedidos[item[1]]; }).then(function () {
-        baixando--; bombear();
-        if (!atual && tela === 'tJogo') proxima();
-      });
-    })(fila.shift());
+    while (baixando < 2 && fila.length) baixar(fila.shift());
+  }
+  function aposBaixa() {
+    baixando--;
+    bombear();
+    if (!atual && tela === 'tJogo') proxima();
+  }
+  function baixar(item) {
+    var disc = item[0], nome = item[1], tent = item[2], geracao = epoca;
+    baixando++;
+    fetch('pacotes/' + nome).then(function (r) {
+      if (!r.ok) throw new Error('http');
+      return r.json();
+    }).then(function (linhas) {
+      if (geracao !== epoca) { aposBaixa(); return; }
+      if (pacoteOk[nome] === 1) { aposBaixa(); return; }
+      if (!aceitarPacote(disc, nome, linhas)) {
+        pacoteOk[nome] = 0;
+        console.warn('Pacote recusado: ' + nome);
+        aposBaixa();
+        return;
+      }
+      aposBaixa();
+    }).catch(function () {
+      if (geracao !== epoca) { aposBaixa(); return; }
+      if (tent < TENTATIVAS) {
+        retriesPend++;
+        baixando--;
+        bombear();
+        setTimeout(function () {
+          if (geracao !== epoca) { if (retriesPend > 0) retriesPend--; return; }
+          if (retriesPend > 0) retriesPend--;
+          fila.push([disc, nome, tent + 1]);
+          bombear();
+          if (!atual && tela === 'tJogo') proxima();
+        }, 400 * tent);
+        return;
+      }
+      delete pedidos[nome];
+      console.warn('Não foi possível baixar o pacote ' + nome);
+      aposBaixa();
+    });
   }
 
   /* ---------- escolha da próxima pergunta ---------- */
@@ -364,26 +468,70 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     return ds[ds.length - 1];
   }
   function pegar(lista) {
-    if (!lista.length) return null;
-    for (var k = 0; k < 12; k++) { var q = lista[Math.floor(Math.random() * lista.length)]; if (!q.f || recFam.indexOf(q.f) < 0) return q; }
-    return lista[Math.floor(Math.random() * lista.length)];
+    if (!lista || !lista.length) return null;
+    var base = atual ? lista.filter(function (q) { return q.id !== atual.id; }) : lista.slice();
+    if (!base.length) return null;
+    for (var k = 0; k < 12; k++) { var q = base[Math.floor(Math.random() * base.length)]; if (!q.f || recFam.indexOf(q.f) < 0) return q; }
+    return base[Math.floor(Math.random() * base.length)];
   }
-  function escolher() {
-    var d = sorteiaDisc(); if (!d) return null;
-    var h = hist(d), agora = Math.floor(Date.now() / 60000), nv = S.niv[d] || 1;
-    var pool = POOL[d]; if (S.rapido) { var c = pool.filter(function (q) { return q.tam <= CURTA; }); if (c.length) pool = c; }
+  function nivelMax(d) {
+    var pool = POOL[d] || [], m = 0;
+    for (var i = 0; i < pool.length; i++) if ((pool[i].n | 0) > m) m = pool[i].n | 0;
+    return m;
+  }
+  function discCompleta(cod) {
+    if (!MAN) return false;
+    var info = null;
+    for (var i = 0; i < MAN.disciplinas.length; i++) if (MAN.disciplinas[i].codigo === cod) info = MAN.disciplinas[i];
+    if (!info || !info.arquivos.length) return false;
+    for (var j = 0; j < info.arquivos.length; j++) if (pacoteOk[info.arquivos[j]] !== 1) return false;
+    return true;
+  }
+  /* se o nível guardado não existe na matéria (inglês não tem nível 3), usa o mais próximo */
+  function nivelEfetivo(d) {
+    var nv = S.niv[d] || 1, max = nivelMax(d), pool = POOL[d] || [];
+    if (!max || !pool.length) return nv < 1 ? 1 : nv;
+    if (discCompleta(d) && nv > max) { S.niv[d] = max; salvarLocal(); nv = max; }
+    for (var i = 0; i < pool.length; i++) if ((pool[i].n | 0) === nv) return nv;
+    var melhor = pool[0].n | 0, dist = Math.abs(melhor - nv);
+    for (var k = 1; k < pool.length; k++) {
+      var n = pool[k].n | 0, dd = Math.abs(n - nv);
+      if (dd < dist || (dd === dist && n > melhor)) { dist = dd; melhor = n; }
+    }
+    return melhor || nv;
+  }
+  function candidatos(d) {
+    var h = hist(d), agora = Math.floor(Date.now() / 60000), nv = nivelEfetivo(d);
+    var pool = POOL[d] || [];
+    if (S.rapido) pool = pool.filter(function (q) { return q.tam <= CURTA; });
     var rever = [], novasNv = [], novas = [], velhas = [];
     pool.forEach(function (q) {
       if (atual && q.id === atual.id) return;
       var e = h[q.id];
-      if (!e) { (q.n === nv ? novasNv : novas).push(q); }
+      if (!e) { ((q.n | 0) === nv ? novasNv : novas).push(q); }
       else if (e[3] === 0) { if (agora - e[0] >= REVER_MIN) rever.push(q); }
       else if (agora - e[0] >= DESCANSO_MIN) velhas.push(q);
     });
-    if (rever.length && Math.random() < 0.3) return pegar(rever);
-    if (novasNv.length) return pegar(novasNv);
-    if (novas.length) { novas.sort(function (a, b) { return Math.abs(a.n - nv) - Math.abs(b.n - nv); }); return pegar(novas.slice(0, Math.max(20, Math.floor(novas.length / 3)))); }
-    return pegar(rever) || pegar(velhas) || pegar(pool);
+    return { rever: rever, novasNv: novasNv, novas: novas, velhas: velhas, nv: nv };
+  }
+  function daLista(c) {
+    if (c.rever.length && Math.random() < 0.3) return pegar(c.rever);
+    if (c.novasNv.length) return pegar(c.novasNv);
+    if (c.novas.length) {
+      var nv = c.nv;
+      c.novas.sort(function (a, b) { return Math.abs(a.n - nv) - Math.abs(b.n - nv); });
+      return pegar(c.novas.slice(0, Math.max(20, Math.floor(c.novas.length / 3))));
+    }
+    return pegar(c.rever) || pegar(c.velhas) || null;
+  }
+  function escolher() {
+    var d = sorteiaDisc(); if (!d) return null;
+    var q = daLista(candidatos(d));
+    if (q) return q;
+    var ds = selecionadas().filter(function (x) { return x !== d && POOL[x] && POOL[x].length; });
+    for (var i = ds.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var tmp = ds[i]; ds[i] = ds[j]; ds[j] = tmp; }
+    for (var k = 0; k < ds.length; k++) { q = daLista(candidatos(ds[k])); if (q) return q; }
+    return null;
   }
   /* a próxima pergunta é sorteada enquanto a pessoa lê a explicação; o toque em "Próxima" só troca o texto */
   var tPrep = null;
@@ -436,18 +584,60 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   document.addEventListener('scroll', function (ev) { var el = ev.target; if (el.classList && el.classList.contains('rola')) el.classList.toggle('fim', el.scrollTop + el.clientHeight >= el.scrollHeight - 2); }, true);
   window.addEventListener('resize', function () { if (atual && tela === 'tJogo') { encaixarPergunta(); if (respondida) encaixarVeredito(); } });
 
-  function limparPergunta() {
-    atual = null; prox = null; respondida = false; pend = null;
-    elEnun.hidden = true; $('carregando').hidden = false; elAlts.style.visibility = 'hidden'; esperaVeredito();
-    $('mDisc').textContent = ''; $('mTop').textContent = '';
+  function preencherVazio(titulo, texto) {
+    var c = $('carregando');
+    c.hidden = false; c.textContent = '';
+    var h = document.createElement('h2'); h.textContent = titulo;
+    var p = document.createElement('p'); p.textContent = texto;
+    c.appendChild(h); c.appendChild(p);
+  }
+  function textoCarregando() {
+    acaoProx = null;
+    preencherVazio('Carregando perguntas', 'O primeiro pacote chega em instantes.');
+    elEnun.hidden = true; elAlts.style.visibility = 'hidden';
     elProx.setAttribute('aria-disabled', 'true'); elProx.textContent = 'Carregando…';
   }
+  function mostrarErroCarga() {
+    limparPergunta();
+    preencherVazio('Não consegui carregar as perguntas', 'Verifique a conexão e tente de novo.');
+    acaoProx = tentarDeNovo;
+    elProx.setAttribute('aria-disabled', 'false'); elProx.textContent = 'Tentar de novo';
+    mostrar('tJogo'); placar();
+  }
+  function mostrarSemPergunta() {
+    limparPergunta();
+    preencherVazio('Nenhuma pergunta disponível agora', S.rapido && !temCurta()
+      ? 'O modo rápido só mostra perguntas curtas e não há nenhuma nas matérias escolhidas.'
+      : 'As próximas ainda estão no intervalo de revisão ou de descanso.');
+    elProx.setAttribute('aria-disabled', 'true'); elProx.textContent = 'Sem pergunta agora';
+    mostrar('tJogo'); placar();
+  }
+  function tentarDeNovo() {
+    if (cargaAtiva()) return;
+    epoca++; tentMan = 0; acaoProx = null;
+    textoCarregando();
+    if (!MAN) { carregarManifest(); return; }
+    montarFila();
+    if (!cargaAtiva() && !temPerguntas()) mostrarErroCarga();
+  }
+  function limparPergunta() {
+    atual = null; prox = null; respondida = false; pend = null;
+    esperaVeredito();
+    $('mDisc').textContent = ''; $('mTop').textContent = '';
+    for (var p = 0; p < elPts.length; p++) elPts[p].className = '';
+    $('mNiv').removeAttribute('aria-label');
+    textoCarregando();
+  }
   function proxima() {
+    acaoProx = null;
     viraDia();
     if (S.feitas >= LIM + S.bonus) { limparPergunta(); telaLimite(); return; }
     var q = proxValida() ? prox : escolher(); prox = null; clearTimeout(tPrep);
-    if (!q) { limparPergunta(); $('carregando').hidden = false; mostrar('tJogo'); placar(); return; }
-    var primeira = !atual;
+    if (!q) {
+      if (cargaAtiva() || !MAN) { limparPergunta(); mostrar('tJogo'); placar(); return; }
+      if (!temPerguntas()) { mostrarErroCarga(); return; }
+      mostrarSemPergunta(); return;
+    }
     atual = q; respondida = false; pend = null;
     if (q.f) { recFam.push(q.f); if (recFam.length > 15) recFam.shift(); }
     $('mDisc').textContent = NOME[q.d] || q.d; $('mTop').textContent = q.t;
@@ -458,13 +648,15 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     elAlts.className = 'alts';
     esperaVeredito();
     elProx.setAttribute('aria-disabled', 'true'); elProx.textContent = 'Escolha uma alternativa';
-    if (primeira) { $('carregando').hidden = true; elEnun.hidden = false; elAlts.style.visibility = ''; }
+    $('carregando').hidden = true; elEnun.hidden = false; elAlts.style.visibility = '';
     if (tela !== 'tJogo') mostrar('tJogo');
     encaixarPergunta();
     placar();
   }
   function responder(i) {
     if (respondida || !atual || tela !== 'tJogo') return;
+    /* resposta depois da meia-noite conta no dia novo, não no anterior */
+    if (viraDia()) placar();
     respondida = true; tResp = Date.now(); pend = null;
     var q = atual, ok = i === q.c, d = q.d;
     /* 1) o que a pessoa vê muda primeiro */
@@ -493,34 +685,49 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     if (atual.n !== nv) return '';
     j.push(ok ? 1 : 0); if (j.length > 20) j.shift();
     var taxa = j.reduce(function (s, x) { return s + x; }, 0) / j.length;
-    if (j.length >= 15 && taxa >= 0.85 && nv < 3) { S.niv[d] = nv + 1; S.jan[d] = []; return 'Você subiu para o nível ' + (nv + 1) + ' em ' + (NOME[d] || d); }
+    var teto = Math.min(3, nivelMax(d) || nv);
+    if (j.length >= 15 && taxa >= 0.85 && nv < teto) { S.niv[d] = nv + 1; S.jan[d] = []; return 'Você subiu para o nível ' + (nv + 1) + ' em ' + (NOME[d] || d); }
     if (j.length >= 12 && taxa <= 0.35 && nv > 1) { S.niv[d] = nv - 1; S.jan[d] = []; return 'Voltamos ao nível ' + (nv - 1) + ' em ' + (NOME[d] || d) + ' para reforçar a base'; }
     return '';
   }
   var tToast = null;
   function toast(msg) { var t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(tToast); tToast = setTimeout(function () { t.hidden = true; }, 2200); }
+  function avisoGravacao() {
+    if (avisouGravacao) return;
+    avisouGravacao = true;
+    toast('Não consegui salvar o progresso neste aparelho.');
+  }
 
   function telaLimite() {
     $('lAcertos').textContent = S.certasHoje + '/' + S.feitas;
-    $('lTexto').textContent = 'acertos hoje (' + (S.feitas ? Math.round(100 * S.certasHoje / S.feitas) : 0) + '%). Maior sequência: ' + S.melhor + '. Amanhã o contador volta a ' + LIM + '.';
+    var texto = 'acertos hoje (' + (S.feitas ? Math.round(100 * S.certasHoje / S.feitas) : 0) + '%). Maior sequência: ' + S.melhor + '. Amanhã o contador volta a ' + LIM + '.';
+    if (S.adPago) texto += ' O bônus de hoje já foi usado.';
+    $('lTexto').textContent = texto;
+    $('cartaoAd').hidden = !!S.adPago;
+    $('bAnuncio').hidden = !!S.adPago;
     mostrar('tLim'); placar();
   }
   var tAd = null;
   function anuncio() {
-    adFim = Date.now() + AD_S * 1000; adPago = false;
+    if (checarDia()) return;
+    if (S.adPago) { telaLimite(); return; }
+    adFim = Date.now() + AD_S * 1000;
     mostrar('tAd'); tickAd();
     clearInterval(tAd); tAd = setInterval(tickAd, 250);
   }
   function tickAd() {
+    if (viraDia()) { clearInterval(tAd); tAd = null; adFim = 0; placar(); proxima(); return; }
     var b = $('bAdOk'), resta = Math.max(0, Math.ceil((adFim - Date.now()) / 1000));
     $('adSeg').textContent = resta; $('adBarra').style.width = Math.min(100, 100 * (AD_S - (adFim - Date.now()) / 1000) / AD_S) + '%';
     if (resta <= 0) { clearInterval(tAd); tAd = null; b.disabled = false; b.textContent = 'Liberar mais ' + BONUS + ' perguntas'; }
     else { b.disabled = true; b.textContent = 'Aguarde ' + resta + ' s'; }
   }
   function liberar() {
-    if (adPago || Date.now() < adFim) return;
-    adPago = true; $('bAdOk').disabled = true;
-    viraDia(); S.bonus += BONUS; salvarLocal();
+    if (Date.now() < adFim) return;
+    if (viraDia()) { clearInterval(tAd); tAd = null; adFim = 0; placar(); proxima(); return; }
+    if (S.adPago) return;
+    S.adPago = true; S.bonus = BONUS; $('bAdOk').disabled = true;
+    salvarLocal(); descarregar();
     toast(BONUS + ' perguntas liberadas');
     proxima();
   }
@@ -533,14 +740,14 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       var l = document.createElement('label'); l.className = 'linha';
       var n = document.createElement('span'); n.className = 'nome'; n.textContent = d.nome;
       var det = document.createElement('span'); det.className = 'det';
-      det.textContent = 'Nível ' + (S.niv[d.codigo] || 1) + ' · ' + ids.length + ' de ' + d.total.toLocaleString('pt-BR') + ' vistas' + (tent ? ' · ' + Math.round(100 * ok / tent) + '%' : '');
+      det.textContent = 'Nível ' + nivelEfetivo(d.codigo) + ' · ' + ids.length + ' de ' + d.total.toLocaleString('pt-BR') + ' vistas' + (tent ? ' · ' + Math.round(100 * ok / tent) + '%' : '');
       var c = document.createElement('input'); c.type = 'checkbox'; c.className = 'tog'; c.id = 'm-' + d.codigo; c.checked = sel.indexOf(d.codigo) >= 0;
       c.addEventListener('change', function () { alternar(d.codigo, c); });
       l.appendChild(n); l.appendChild(det); l.appendChild(c); box.appendChild(l);
     });
     $('oRapido').checked = !!S.rapido; $('oVibra').checked = !!S.vibra;
-    $('devInfo').textContent = 'Hoje: ' + S.feitas + ' respondidas de ' + (LIM + S.bonus) + ' liberadas.';
-    desarmar(); aplicarTema();
+    if ($('devInfo')) $('devInfo').textContent = 'Hoje: ' + S.feitas + ' respondidas de ' + (LIM + S.bonus) + ' liberadas.';
+    if ($('bZerarTudo')) desarmar(); aplicarTema();
     $('resumo').textContent = S.total ? ('No total: ' + S.total.toLocaleString('pt-BR') + ' respostas, ' + Math.round(100 * S.certas / S.total) + '% de acerto, maior sequência de ' + S.melhor + '.') : 'Escolha as matérias que entram no sorteio. O nível sobe sozinho quando você acerta bastante.';
     mostrar('tMat');
   }
@@ -577,6 +784,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       var sel = S.sel, tema = S.tema, vib = S.vibra;
       S = Object.assign(novoEstado(), r.e); delete S.auto; delete S.fita;
       if (!S.sel) S.sel = sel; if (r.e.tema === undefined) S.tema = tema; if (r.e.vibra === undefined) S.vibra = vib;
+      if (normalizarBonus()) { S.atualizado = Date.now(); sujo.estado = 1; }
       ls.set('cq1-estado', S); aplicarTema();
     }
     else if ((S.atualizado || 0) > ((r.e && r.e.atualizado) || 0)) sujo.estado = 1;
@@ -592,7 +800,10 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     if (tela === 'tMat') telaMaterias();
     if (Object.keys(sujo).length && !tSync) tSync = setTimeout(function () { tSync = null; gravar(); }, 3000);
   }
+  var nuvemLigada = false;
   function ligarNuvem() {
+    if (nuvemLigada) return;
+    nuvemLigada = true;
     if (!window.claude || !window.claude.use) { estadoNuvem = 'local'; textoNuvem(); return; }
     Promise.all([window.claude.use('db'), window.claude.use('user')]).then(function (x) {
       var db = x[0], user = x[1];
@@ -623,10 +834,10 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
 
   /* ---------- botões de teste ---------- */
   var tArma = null;
-  function desarmar() { clearTimeout(tArma); var b = $('bZerarTudo'); b.classList.remove('armado'); b.textContent = 'Começar do zero'; }
+  function desarmar() { clearTimeout(tArma); var b = $('bZerarTudo'); if (!b) return; b.classList.remove('armado'); b.textContent = 'Começar do zero'; }
   function zerarDia() {
-    S.dia = hoje(); S.feitas = 0; S.bonus = 0; S.certasHoje = 0; S.seq = 0;
-    adPago = false; adFim = 0; clearInterval(tAd); tAd = null;
+    S.dia = hoje(); S.feitas = 0; S.bonus = 0; S.adPago = false; S.certasHoje = 0; S.seq = 0;
+    adFim = 0; clearInterval(tAd); tAd = null;
     salvarLocal(); descarregar(); gravarJa();
   }
   function zerarTudo() {
@@ -667,7 +878,10 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     if (ev.detail !== 0) return; /* teclado e leitores de tela */
     var b = ev.target.closest ? ev.target.closest('.alt') : null; if (b) responder(+b.getAttribute('data-i'));
   });
-  function avancar() { if (respondida && tela === 'tJogo') proxima(); }
+  function avancar() {
+    if (acaoProx && tela === 'tJogo') { var f = acaoProx; acaoProx = null; f(); return; }
+    if (respondida && tela === 'tJogo') proxima();
+  }
   elProx.addEventListener('pointerdown', function (ev) { if (ev.pointerType === 'mouse' && ev.button !== 0) return; avancar(); });
   elProx.addEventListener('click', function (ev) { if (ev.detail === 0) avancar(); });
   /* depois de responder, um toque em qualquer ponto da pergunta também avança (menos na explicação e no botão) */
@@ -686,35 +900,81 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   $('bLimMat').addEventListener('click', telaMaterias);
   $('bAnuncio').addEventListener('click', anuncio);
   $('bAdOk').addEventListener('click', liberar);
-  $('bZerarDia').addEventListener('click', function () { zerarDia(); toast('Contador de hoje zerado'); limparPergunta(); proxima(); });
-  $('bZerarTudo').addEventListener('click', zerarTudo);
   $('bSinal').addEventListener('click', sinalizar);
   $('oRapido').addEventListener('change', function () { S.rapido = this.checked; prox = null; salvarLocal(); });
   $('oVibra').addEventListener('change', function () { S.vibra = this.checked; salvarLocal(); if (S.vibra) { vibrar(true); soltarHap(); } });
   document.addEventListener('keydown', function (ev) {
-    if (tela !== 'tJogo' || !atual || ev.metaKey || ev.ctrlKey || ev.altKey) return;
-    var k = ev.key.toLowerCase(), i = '1234'.indexOf(k); if (i < 0) i = 'abcd'.indexOf(k);
+    if (tela !== 'tJogo' || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    var k = ev.key.toLowerCase();
+    if (acaoProx && (k === 'enter' || k === ' ')) { ev.preventDefault(); avancar(); return; }
+    if (!atual) return;
+    var i = '1234'.indexOf(k); if (i < 0) i = 'abcd'.indexOf(k);
     if (k.length === 1 && i >= 0 && !respondida) responder(i);
     else if ((k === 'enter' || k === ' ' || k === 'arrowright') && respondida) { ev.preventDefault(); proxima(); }
   });
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') { descarregar(); clearTimeout(tSync); tSync = null; gravar(); }
-    else { viraDia(); placar(); if (tela === 'tAd') { tickAd(); if (!tAd && Date.now() < adFim) tAd = setInterval(tickAd, 250); } }
+    else {
+      if (checarDia()) return;
+      placar();
+      if (tela === 'tAd') { tickAd(); if (!tAd && Date.now() < adFim) tAd = setInterval(tickAd, 250); }
+    }
   });
   window.addEventListener('pagehide', descarregar);
-  window.cqTeste = function (q) { atual = q; respondida = false; elEnun.hidden = false; $('carregando').hidden = true; elAlts.style.visibility = ''; elEnun.textContent = q.q; for (var i = 0; i < 4; i++) elTxt[i].textContent = q.a[i]; encaixarPergunta(); $('vTit').textContent = 'Errado. A resposta é a D.'; $('vTxt').textContent = q.e; encaixarVeredito(); return [apertado, elVT.classList.contains('rola'), elEnun.style.fontSize, elAlts.style.getPropertyValue('--fa'), elVT.style.fontSize]; };
+  /* painel e atalho de teste só no próprio computador; na versão publicada não existem */
+  function ehLocal() {
+    var h = location.hostname;
+    return h === 'localhost' || h === '127.0.0.1' || h === '::1' || h === '[::1]';
+  }
+  if (ehLocal()) {
+    $('dev').hidden = false;
+    $('bZerarDia').addEventListener('click', function () { zerarDia(); toast('Contador de hoje zerado'); limparPergunta(); proxima(); });
+    $('bZerarTudo').addEventListener('click', zerarTudo);
+    window.cqTeste = function (q) { atual = q; respondida = false; elEnun.hidden = false; $('carregando').hidden = true; elAlts.style.visibility = ''; elEnun.textContent = q.q; for (var i = 0; i < 4; i++) elTxt[i].textContent = q.a[i]; encaixarPergunta(); $('vTit').textContent = 'Errado. A resposta é a D.'; $('vTxt').textContent = q.e; encaixarVeredito(); return [apertado, elVT.classList.contains('rola'), elEnun.style.fontSize, elAlts.style.getPropertyValue('--fa'), elVT.style.fontSize]; };
+  } else {
+    var painelDev = $('dev');
+    if (painelDev && painelDev.parentNode) painelDev.parentNode.removeChild(painelDev);
+  }
+
+  function carregarManifest() {
+    var geracao = epoca;
+    fetch('pacotes/manifest.json').then(function (r) {
+      if (!r.ok) throw new Error('http');
+      return r.json();
+    }).then(function (m) {
+      if (geracao !== epoca) return;
+      if (!m || !Array.isArray(m.disciplinas) || !m.disciplinas.length) throw new Error('manifest');
+      for (var i = 0; i < m.disciplinas.length; i++) {
+        var d = m.disciplinas[i];
+        if (!d || typeof d.codigo !== 'string' || !d.codigo || !Array.isArray(d.arquivos) || !d.arquivos.length) throw new Error('manifest');
+      }
+      MAN = m;
+      m.disciplinas.forEach(function (d) { NOME[d.codigo] = d.nome; });
+      montarFila();
+      ligarNuvem();
+    }).catch(function () {
+      if (geracao !== epoca) return;
+      tentMan++;
+      if (tentMan < TENTATIVAS) setTimeout(function () { if (geracao === epoca) carregarManifest(); }, 400 * tentMan);
+      else mostrarErroCarga();
+    });
+  }
 
   /* ---------- início ---------- */
+  aoFalharGravacao = function () { falhaGravacao = true; avisoGravacao(); };
+  if (falhaGravacao) avisoGravacao();
   aplicarTema(); viraDia(); placar();
-  fetch('pacotes/manifest.json').then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (m) {
-    MAN = m; m.disciplinas.forEach(function (d) { NOME[d.codigo] = d.nome; });
-    montarFila(); ligarNuvem();
-  }).catch(function () {
-    var c = $('carregando'); c.textContent = '';
-    var h = document.createElement('h2'); h.textContent = 'Não consegui carregar as perguntas';
-    var p = document.createElement('p'); p.textContent = 'Verifique a conexão e abra a página de novo.';
-    c.appendChild(h); c.appendChild(p);
-  });
+  carregarManifest();
+  var tVarredura = 0;
+  setInterval(function () {
+    if (checarDia()) return;
+    if (tela !== 'tJogo' || atual || acaoProx || !MAN || cargaAtiva() || !temPerguntas()) return;
+    var agoraMs = Date.now();
+    if (agoraMs - tVarredura < 5000) return;
+    tVarredura = agoraMs;
+    var q = escolher();
+    if (q) { prox = q; proxima(); }
+  }, 1000);
 })();
 </script>
 </body></html>
