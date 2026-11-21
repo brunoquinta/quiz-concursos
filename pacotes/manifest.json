@@ -1,0 +1,109 @@
+{
+ "versao": 1,
+ "total": 10012,
+ "disciplinas": [
+  {
+   "codigo": "pt",
+   "nome": "Língua Portuguesa",
+   "total": 2600,
+   "arquivos": [
+    "pt-01.json",
+    "pt-02.json",
+    "pt-03.json",
+    "pt-04.json",
+    "pt-05.json",
+    "pt-06.json"
+   ]
+  },
+  {
+   "codigo": "rlm",
+   "nome": "Raciocínio Lógico e Matemática",
+   "total": 2000,
+   "arquivos": [
+    "rlm-01.json",
+    "rlm-02.json",
+    "rlm-03.json",
+    "rlm-04.json"
+   ]
+  },
+  {
+   "codigo": "inf",
+   "nome": "Informática",
+   "total": 1500,
+   "arquivos": [
+    "inf-01.json",
+    "inf-02.json",
+    "inf-03.json"
+   ]
+  },
+  {
+   "codigo": "const",
+   "nome": "Direito Constitucional",
+   "total": 800,
+   "arquivos": [
+    "const-01.json",
+    "const-02.json"
+   ]
+  },
+  {
+   "codigo": "adm",
+   "nome": "Direito Administrativo",
+   "total": 800,
+   "arquivos": [
+    "adm-01.json",
+    "adm-02.json"
+   ]
+  },
+  {
+   "codigo": "leg",
+   "nome": "Legislação do Serviço Público e Ética",
+   "total": 800,
+   "arquivos": [
+    "leg-01.json",
+    "leg-02.json"
+   ]
+  },
+  {
+   "codigo": "cg",
+   "nome": "Conhecimentos Gerais",
+   "total": 500,
+   "arquivos": [
+    "cg-01.json"
+   ]
+  },
+  {
+   "codigo": "admpub",
+   "nome": "Administração Pública e Orçamento",
+   "total": 500,
+   "arquivos": [
+    "admpub-01.json"
+   ]
+  },
+  {
+   "codigo": "ing",
+   "nome": "Língua Inglesa",
+   "total": 312,
+   "arquivos": [
+    "ing-01.json"
+   ]
+  },
+  {
+   "codigo": "dh",
+   "nome": "Direitos Humanos e Cidadania",
+   "total": 200,
+   "arquivos": [
+    "dh-01.json"
+   ]
+  }
+ ],
+ "formato_item": [
+  "id",
+  "topico",
+  "nivel",
+  "enunciado",
+  "alternativas",
+  "correta",
+  "explicacao",
+  "familia"
+ ]
+}

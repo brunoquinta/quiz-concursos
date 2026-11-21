@@ -1,0 +1,720 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><style>body{margin:0}[hidden]{display:none!important}</style></head><body><title>Quiz de Concursos Piloto</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: uma tela de app, coluna única centrada de até 560px. Cápsula de vidro no topo (botão | 3 números | botão),
+   pergunta e 4 alternativas no meio, botão largo no pé. Tudo espelhado em torno do eixo central. */
+:root {
+  --bg: #eaf0fb; --ink: #0b1220; --muted: #56617a;
+  --glass: rgba(255,255,255,.58); --glass-2: rgba(255,255,255,.82);
+  --edge: rgba(255,255,255,.9); --hair: rgba(11,18,32,.12); --shadow: 0 8px 28px rgba(30,50,110,.12);
+  --accent: #0a6cff; --on-accent: #ffffff; --accent-fill: rgba(10,108,255,.12);
+  --ok: #0f9d4d; --ok-fill: rgba(15,157,77,.16); --bad: #dc3327; --bad-fill: rgba(220,51,39,.14);
+  --b1: #a9cbff; --b2: #cdbdff; --b3: #a6eadf;
+  --r: 22px;
+  --f: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #060914; --ink: #f1f4fb; --muted: #9aa6c2;
+    --glass: rgba(255,255,255,.075); --glass-2: rgba(255,255,255,.13);
+    --edge: rgba(255,255,255,.16); --hair: rgba(255,255,255,.14); --shadow: 0 8px 28px rgba(0,0,0,.45);
+    --accent: #3f8cff; --on-accent: #ffffff; --accent-fill: rgba(63,140,255,.18);
+    --ok: #35d07c; --ok-fill: rgba(53,208,124,.18); --bad: #ff6055; --bad-fill: rgba(255,96,85,.18);
+    --b1: #12357f; --b2: #37226f; --b3: #0c4a52;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #060914; --ink: #f1f4fb; --muted: #9aa6c2;
+  --glass: rgba(255,255,255,.075); --glass-2: rgba(255,255,255,.13);
+  --edge: rgba(255,255,255,.16); --hair: rgba(255,255,255,.14); --shadow: 0 8px 28px rgba(0,0,0,.45);
+  --accent: #3f8cff; --on-accent: #ffffff; --accent-fill: rgba(63,140,255,.18);
+  --ok: #35d07c; --ok-fill: rgba(53,208,124,.18); --bad: #ff6055; --bad-fill: rgba(255,96,85,.18);
+  --b1: #12357f; --b2: #37226f; --b3: #0c4a52;
+  color-scheme: dark;
+}
+:root[data-theme="light"] { color-scheme: light; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f); font-size: 16px; line-height: 1.42;
+  padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+  overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+}
+.fundo { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(60% 42% at 12% 4%, var(--b1) 0%, transparent 70%),
+    radial-gradient(55% 40% at 92% 30%, var(--b2) 0%, transparent 70%),
+    radial-gradient(70% 45% at 40% 104%, var(--b3) 0%, transparent 70%);
+}
+button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; border: 0; background: none; padding: 0; margin: 0; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.app { box-sizing: border-box; position: relative; z-index: 1; max-width: 560px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; gap: 14px;
+  padding-top: max(12px, env(safe-area-inset-top, 0px)); padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)); }
+.vidro { background: var(--glass); border: 1px solid var(--edge); box-shadow: var(--shadow), inset 0 1px 0 var(--edge); }
+.fosco { -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%); }
+
+/* cápsula do topo */
+.topo { border-radius: 30px; padding: 8px; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 6px; position: relative; overflow: hidden; flex: none; }
+.redondo { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--glass-2); border: 1px solid var(--edge); }
+.redondo svg { width: 20px; height: 20px; }
+.redondo:active { transform: scale(.94); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
+.st b { display: block; font-size: 19px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.st span { font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.st + .st { border-left: 1px solid var(--hair); }
+.prog { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: transparent; }
+.prog i { display: block; height: 100%; background: var(--accent); transform-origin: left center; transform: scaleX(0); }
+
+/* telas */
+.tela { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+.rolo { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 12px; padding: 4px 12px 14px; margin: 0 -12px; scrollbar-width: none; }
+.rolo > * { flex: none; }
+.rolo::-webkit-scrollbar { display: none; }
+.jogo { display: grid; grid-template-rows: 32px minmax(0, .8fr) minmax(0, 3.4fr) minmax(0, .8fr) auto; gap: 8px; }
+.jogo > * { min-height: 0; min-width: 0; }
+.meta { display: grid; grid-template-rows: 15px 17px; text-align: center; }
+.meta .disc, .meta .sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta .disc { font-weight: 700; color: var(--accent); font-size: 11.5px; line-height: 15px; letter-spacing: .09em; text-transform: uppercase; }
+.meta .sub { font-size: 13px; line-height: 17px; color: var(--muted); }
+.meta .sub .pts { vertical-align: 1px; margin-left: 8px; }
+.caixaQ { display: flex; align-items: center; justify-content: center; padding: 0 6px; overflow: hidden; }
+.caixaQ .vazio { margin: 0; }
+.pts { display: inline-flex; gap: 4px; }
+.pts i { width: 7px; height: 7px; border-radius: 50%; background: var(--hair); }
+.pts i.on { background: var(--accent); }
+.enun { width: 100%; max-height: 100%; overflow: hidden; font-size: 18px; line-height: 1.32; font-weight: 600; letter-spacing: -0.01em; white-space: pre-wrap; overflow-wrap: anywhere; text-wrap: pretty; }
+.enun.rola, .alt .txt.rola, .vtexto.rola { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(#000 72%, transparent); mask-image: linear-gradient(#000 72%, transparent); }
+.rola.fim { -webkit-mask-image: none; mask-image: none; }
+.rola::-webkit-scrollbar { display: none; }
+.alts { display: grid; grid-template-rows: repeat(4, minmax(0, 1fr)); gap: 7px; }
+.alt { display: grid; grid-template-columns: 30px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 10px; align-items: center; text-align: left; width: 100%; height: 100%; overflow: hidden;
+  background: var(--glass); border: 1px solid var(--edge); box-shadow: 0 3px 10px rgba(20,35,80,.08), inset 0 1px 0 var(--edge);
+  border-radius: 20px; padding: 4px 12px 4px 10px; }
+.alt .bolha { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; background: var(--accent-fill); color: var(--accent); }
+.alt .txt { min-width: 0; max-height: 100%; overflow: hidden; overflow-wrap: anywhere; font-size: var(--fa, 16px); line-height: 1.2; }
+@media (hover: hover) and (pointer: fine) { .alts:not(.feito) .alt:hover { background: var(--glass-2); } }
+.alts.feito .alt { cursor: default; }
+.alt.certa { background: var(--ok-fill); border-color: var(--ok); }
+.alt.certa .bolha { background: var(--ok); color: #fff; }
+.alt.errada { background: var(--bad-fill); border-color: var(--bad); }
+.alt.errada .bolha { background: var(--bad); color: #fff; }
+.alt.apagada { opacity: .5; box-shadow: none; }
+.veredito { box-shadow: 0 3px 10px rgba(20,35,80,.08), inset 0 1px 0 var(--edge); border-radius: var(--r); padding: 8px 6px 8px 16px; display: grid; grid-template-columns: minmax(0, 1fr) 40px; gap: 4px; align-items: center; overflow: hidden; }
+.veredito.espera { opacity: .45; box-shadow: none; }
+.vtexto { max-height: 100%; overflow: hidden; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+.veredito.espera .vtexto { color: var(--muted); }
+.veredito b { font-weight: 700; }
+.veredito.c b { color: var(--ok); } .veredito.e b { color: var(--bad); }
+.bandeira { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); align-self: start; }
+.bandeira svg { width: 18px; height: 18px; }
+.bandeira[aria-pressed="true"] { color: var(--bad); }
+.bandeira[aria-pressed="true"] svg path { fill: currentColor; }
+.veredito.espera .bandeira { visibility: hidden; }
+.linkbtn { padding: 8px 12px; color: var(--muted); font-size: 13px; text-decoration: underline; align-self: center; }
+.pe { display: flex; gap: 10px; align-items: center; flex: none; }
+.btn { flex: 1; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-weight: 700; font-size: 17px; padding: 14px 18px; min-height: 56px; box-shadow: 0 8px 22px rgba(10,108,255,.28), inset 0 1px 0 rgba(255,255,255,.35); }
+.btn:active { transform: scale(.985); }
+.btn[aria-disabled="true"], .btn:disabled { background: var(--glass); color: var(--muted); box-shadow: inset 0 0 0 1px var(--edge); cursor: default; transform: none; }
+.btn.sec { background: var(--glass-2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--edge); }
+.aviso { font-size: 13px; color: var(--muted); }
+.centro { text-align: center; }
+.vazio { margin: auto; text-align: center; color: var(--muted); max-width: 34ch; }
+.vazio h2 { font-size: 22px; color: var(--ink); margin: 0 0 6px; text-wrap: balance; letter-spacing: -0.01em; }
+
+/* matérias e ajustes */
+h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0; text-align: center; text-wrap: balance; }
+.grupo { border-radius: var(--r); overflow: hidden; box-shadow: 0 3px 10px rgba(20,35,80,.08), inset 0 1px 0 var(--edge); }
+.linha { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; padding: 12px 16px; min-height: 58px; }
+.linha + .linha { border-top: 1px solid var(--hair); }
+.linha .nome { font-weight: 600; min-width: 0; }
+.linha .det { grid-column: 1; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.linha .tog { grid-column: 2; grid-row: 1 / span 2; }
+.tog { -webkit-appearance: none; appearance: none; width: 51px; height: 31px; border-radius: 99px; background: var(--hair); position: relative; flex: none; margin: 0; cursor: pointer; }
+.tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25); transition: transform .14s; }
+.tog:checked { background: var(--ok); }
+.tog:checked::after { transform: translateX(20px); }
+.rot { font-size: 12px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); text-align: center; margin-top: 6px; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 999px; }
+.seg button { border-radius: 999px; padding: 10px 6px; font-weight: 600; font-size: 14px; min-height: 40px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.dev { border: 1.5px dashed var(--bad); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.dev b { color: var(--bad); font-size: 12px; letter-spacing: .09em; text-transform: uppercase; }
+.dev .par { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dev button { border: 1.5px solid var(--bad); color: var(--bad); border-radius: 999px; padding: 10px 8px; font-weight: 600; font-size: 14px; min-height: 44px; }
+.dev button.armado { background: var(--bad); color: #fff; }
+
+/* limite e anúncio */
+.grande { font-weight: 800; font-size: 60px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+.cartao { border-radius: var(--r); padding: 20px; display: flex; flex-direction: column; gap: 8px; text-align: center; }
+.barra { height: 6px; border-radius: 99px; background: var(--hair); overflow: hidden; margin-top: 14px; }
+.barra i { display: block; height: 100%; width: 0; background: var(--accent); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(84px + env(safe-area-inset-top, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; max-width: calc(100% - 32px); text-align: center; z-index: 5; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .tog::after { transition: none; } .redondo:active, .btn:active { transform: none; } }
+</style>
+
+<div class="fundo" aria-hidden="true"></div>
+<div class="app">
+  <header class="topo vidro fosco">
+    <button class="redondo" id="bMaterias" type="button" aria-label="Matérias e ajustes">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
+    </button>
+    <div class="stats">
+      <div class="st"><b id="pHoje">0/50</b><span>hoje</span></div>
+      <div class="st"><b id="pSeq">0</b><span>seguidas</span></div>
+      <div class="st"><b id="pTaxa">–</b><span>acerto</span></div>
+    </div>
+    <button class="redondo" id="bTema" type="button" aria-label="Trocar entre tema claro e escuro">
+      <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 3a7 7 0 0 1 0 14z" fill="currentColor"/></svg>
+    </button>
+    <div class="prog" aria-hidden="true"><i id="pBarra"></i></div>
+  </header>
+
+  <!-- QUIZ -->
+  <main class="tela jogo" id="tJogo">
+      <div class="meta" id="meta">
+        <span class="disc" id="mDisc"></span>
+        <span class="sub"><span id="mTop"></span><span class="pts" id="mNiv" role="img"><i></i><i></i><i></i></span></span>
+      </div>
+      <div class="caixaQ" id="caixaQ">
+        <div class="vazio" id="carregando"><h2>Carregando perguntas</h2><p>O primeiro pacote chega em instantes.</p></div>
+        <div class="enun" id="enun" hidden></div>
+      </div>
+      <div class="alts" id="alts" style="visibility:hidden">
+        <button class="alt" type="button" data-i="0"><span class="bolha">A</span><span class="txt"></span></button>
+        <button class="alt" type="button" data-i="1"><span class="bolha">B</span><span class="txt"></span></button>
+        <button class="alt" type="button" data-i="2"><span class="bolha">C</span><span class="txt"></span></button>
+        <button class="alt" type="button" data-i="3"><span class="bolha">D</span><span class="txt"></span></button>
+      </div>
+      <div class="veredito vidro espera" id="veredito">
+        <div class="vtexto" id="vTexto"><b id="vTit"></b> <span id="vTxt">A explicação aparece aqui.</span></div>
+        <button class="bandeira" id="bSinal" type="button" aria-pressed="false" aria-label="Sinalizar pergunta com problema"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 18V3h9l-1.5 3.5L14 10H5"/></svg></button>
+      </div>
+    <div class="pe">
+      <button class="btn" id="bProx" type="button" aria-disabled="true">Escolha uma alternativa</button>
+    </div>
+  </main>
+
+  <!-- MATÉRIAS -->
+  <section class="tela" id="tMat" hidden>
+    <div class="rolo">
+      <h1>Matérias e ajustes</h1>
+      <p class="aviso centro" id="resumo"></p>
+      <div class="grupo vidro" id="lista"></div>
+      <div class="rot">Ritmo</div>
+      <div class="grupo vidro">
+        <label class="linha"><span class="nome">Modo rápido</span><span class="det">Só perguntas curtas</span><input class="tog" type="checkbox" id="oRapido"></label>
+        <label class="linha"><span class="nome">Vibração</span><span class="det">Toque leve ao responder</span><input class="tog" type="checkbox" id="oVibra"></label>
+      </div>
+      <div class="rot">Aparência</div>
+      <div class="seg vidro" id="seg" role="group" aria-label="Tema">
+        <button type="button" data-tema="auto">Automático</button>
+        <button type="button" data-tema="light">Claro</button>
+        <button type="button" data-tema="dark">Escuro</button>
+      </div>
+      <p class="aviso centro" id="nuvem">Verificando onde o progresso será guardado…</p>
+      <div class="dev" id="dev">
+        <b>Só para testes</b>
+        <span class="aviso" id="devInfo"></span>
+        <div class="par">
+          <button type="button" id="bZerarDia">Zerar hoje</button>
+          <button type="button" id="bZerarTudo">Começar do zero</button>
+        </div>
+        <span class="aviso">"Zerar hoje" libera de novo as 50 do dia. "Começar do zero" também apaga histórico, níveis e sequências. Este quadro sai na versão oficial.</span>
+      </div>
+      <p class="aviso centro">Piloto v4 · banco v1.1</p>
+    </div>
+    <div class="pe"><button class="btn" id="bVoltar" type="button">Voltar ao quiz</button></div>
+  </section>
+
+  <!-- LIMITE -->
+  <section class="tela" id="tLim" hidden>
+    <div class="rolo">
+      <h1>Você fechou as perguntas de hoje</h1>
+      <div class="cartao vidro">
+        <div class="grande" id="lAcertos">0</div>
+        <div class="aviso" id="lTexto"></div>
+      </div>
+      <div class="cartao vidro">
+        <b>Quer continuar?</b>
+        <span class="aviso">Assista a um anúncio de 30 segundos e libere mais 20 perguntas. No piloto, o anúncio é só uma contagem, para testar o ritmo.</span>
+      </div>
+    </div>
+    <div class="pe"><button class="btn sec" id="bLimMat" type="button">Matérias</button><button class="btn" id="bAnuncio" type="button">Ver anúncio</button></div>
+  </section>
+
+  <!-- ANÚNCIO SIMULADO -->
+  <section class="tela" id="tAd" hidden>
+    <div class="rolo">
+      <div class="vazio">
+        <div class="grande" id="adSeg" style="color:var(--ink)">30</div>
+        <h2>Espaço do anúncio</h2>
+        <p>Simulação do piloto. Ao fim da contagem, mais 20 perguntas ficam liberadas.</p>
+        <div class="barra"><i id="adBarra"></i></div>
+      </div>
+    </div>
+    <div class="pe"><button class="btn" id="bAdOk" type="button" disabled>Aguarde</button></div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(function () {
+  'use strict';
+  var LIM = 50, BONUS = 20, AD_S = 30, REVER_MIN = 10, DESCANSO_MIN = 14 * 1440, CURTA = 250;
+  var $ = function (id) { return document.getElementById(id); };
+  var LETRAS = ['A', 'B', 'C', 'D'];
+  function hoje() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  var ls = {
+    get: function (k) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  function novoEstado() {
+    return { v: 1, dia: hoje(), feitas: 0, bonus: 0, certasHoje: 0, seq: 0, melhor: 0, total: 0, certas: 0, niv: {}, jan: {}, sel: null, rapido: false, vibra: true, tema: 'auto', flags: [], atualizado: 0, zerado: 0 };
+  }
+  var MAN = null, NOME = {}, POOL = {}, pedidos = {}, baixando = 0, fila = [];
+  var S = Object.assign(novoEstado(), ls.get('cq1-estado') || {}); delete S.auto; delete S.fita;
+  var H = {}, atual = null, prox = null, respondida = false, recFam = [], tela = 'tJogo', adFim = 0, adPago = false;
+  var tResp = 0, tDown = 0, xDown = 0, yDown = 0, pend = null;
+
+  /* elementos fixos: nada é recriado a cada pergunta */
+  var elJogo = $('tJogo'), elCaixaQ = $('caixaQ'), elVT = $('vTexto'), elAlts = $('alts'), elEnun = $('enun'), elProx = $('bProx'), elVer = $('veredito');
+  var elAlt = Array.prototype.slice.call(elAlts.children), elTxt = elAlt.map(function (b) { return b.lastElementChild; });
+  var elPts = Array.prototype.slice.call($('mNiv').children);
+
+  function viraDia() { if (S.dia !== hoje()) { S.dia = hoje(); S.feitas = 0; S.bonus = 0; S.certasHoje = 0; } }
+  function selecionadas() { return (S.sel && S.sel.length) ? S.sel : (MAN ? MAN.disciplinas.map(function (d) { return d.codigo; }) : []); }
+  function hist(d) { if (!H[d]) H[d] = ls.get('cq1-h-' + d) || {}; return H[d]; }
+
+  /* gravação adiada: o toque nunca espera o armazenamento */
+  var sujoLoc = {}, tLoc = null;
+  function salvarLocal(d) {
+    S.atualizado = Date.now(); sujoLoc.estado = 1; if (d) sujoLoc['h-' + d] = 1;
+    if (!tLoc) tLoc = setTimeout(descarregar, 900);
+    marcar('estado'); if (d) marcar('h-' + d);
+  }
+  function descarregar() {
+    clearTimeout(tLoc); tLoc = null;
+    var ks = Object.keys(sujoLoc); sujoLoc = {};
+    ks.forEach(function (k) { if (k === 'estado') ls.set('cq1-estado', S); else ls.set('cq1-' + k, H[k.slice(2)] || {}); });
+  }
+
+  /* ---------- tema ---------- */
+  var raiz = document.documentElement, temaHost = raiz.getAttribute('data-theme');
+  function aplicarTema() {
+    if (S.tema === 'light' || S.tema === 'dark') raiz.setAttribute('data-theme', S.tema);
+    else if (temaHost) raiz.setAttribute('data-theme', temaHost); else raiz.removeAttribute('data-theme');
+    Array.prototype.forEach.call($('seg').children, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-tema') === (S.tema || 'auto'))); });
+  }
+  function temaEscuroAgora() {
+    var a = raiz.getAttribute('data-theme'); if (a) return a === 'dark';
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+
+  /* ---------- vibração ---------- */
+  var hapPend = 0;
+  function hapIOS() {
+    /* Safari no iPhone não tem a API de vibração; alternar um interruptor nativo produz o toque leve do sistema */
+    try {
+      var l = document.createElement('label'); l.setAttribute('aria-hidden', 'true'); l.style.display = 'none';
+      var i = document.createElement('input'); i.type = 'checkbox'; i.setAttribute('switch', '');
+      l.appendChild(i); document.head.appendChild(l); l.click(); document.head.removeChild(l);
+    } catch (e) {}
+  }
+  function vibrar(ok) {
+    if (!S.vibra) return;
+    if (navigator.vibrate) { try { navigator.vibrate(ok ? 12 : [14, 45, 14]); } catch (e) {} }
+    else hapPend = ok ? 1 : 2;
+  }
+  function soltarHap() { if (!hapPend) return; var n = hapPend; hapPend = 0; hapIOS(); if (n === 2) setTimeout(hapIOS, 110); }
+  document.addEventListener('touchend', soltarHap, true);
+  document.addEventListener('pointerup', soltarHap, true);
+
+  /* ---------- pacotes ---------- */
+  function montarFila() {
+    var sel = selecionadas(), porD = {}, max = 0;
+    MAN.disciplinas.forEach(function (d) { if (sel.indexOf(d.codigo) >= 0) { porD[d.codigo] = d.arquivos.filter(function (a) { return !pedidos[a]; }); max = Math.max(max, porD[d.codigo].length); } });
+    var ordem = Object.keys(porD).sort(function () { return Math.random() - 0.5; });
+    for (var i = 0; i < max; i++) ordem.forEach(function (c) { if (porD[c][i]) { pedidos[porD[c][i]] = 1; fila.push([c, porD[c][i]]); } });
+    bombear();
+  }
+  function bombear() {
+    while (baixando < 2 && fila.length) (function (item) {
+      baixando++;
+      fetch('pacotes/' + item[1]).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (linhas) {
+        var arr = POOL[item[0]] || (POOL[item[0]] = []);
+        linhas.forEach(function (l) {
+          var tam = l[3].length + l[4].join('').length, e = l[6] || '';
+          arr.push({ id: l[0], t: l[1], n: l[2], q: l[3], a: l[4], c: l[5], e: e.charAt(0).toUpperCase() + e.slice(1), f: l[7], d: item[0], tam: tam });
+        });
+      }).catch(function () { delete pedidos[item[1]]; }).then(function () {
+        baixando--; bombear();
+        if (!atual && tela === 'tJogo') proxima();
+      });
+    })(fila.shift());
+  }
+
+  /* ---------- escolha da próxima pergunta ---------- */
+  function sorteiaDisc() {
+    var ds = selecionadas().filter(function (d) { return POOL[d] && POOL[d].length; });
+    if (!ds.length) return null;
+    var tot = ds.reduce(function (s, d) { return s + POOL[d].length; }, 0), r = Math.random() * tot;
+    for (var i = 0; i < ds.length; i++) { r -= POOL[ds[i]].length; if (r <= 0) return ds[i]; }
+    return ds[ds.length - 1];
+  }
+  function pegar(lista) {
+    if (!lista.length) return null;
+    for (var k = 0; k < 12; k++) { var q = lista[Math.floor(Math.random() * lista.length)]; if (!q.f || recFam.indexOf(q.f) < 0) return q; }
+    return lista[Math.floor(Math.random() * lista.length)];
+  }
+  function escolher() {
+    var d = sorteiaDisc(); if (!d) return null;
+    var h = hist(d), agora = Math.floor(Date.now() / 60000), nv = S.niv[d] || 1;
+    var pool = POOL[d]; if (S.rapido) { var c = pool.filter(function (q) { return q.tam <= CURTA; }); if (c.length) pool = c; }
+    var rever = [], novasNv = [], novas = [], velhas = [];
+    pool.forEach(function (q) {
+      if (atual && q.id === atual.id) return;
+      var e = h[q.id];
+      if (!e) { (q.n === nv ? novasNv : novas).push(q); }
+      else if (e[3] === 0) { if (agora - e[0] >= REVER_MIN) rever.push(q); }
+      else if (agora - e[0] >= DESCANSO_MIN) velhas.push(q);
+    });
+    if (rever.length && Math.random() < 0.3) return pegar(rever);
+    if (novasNv.length) return pegar(novasNv);
+    if (novas.length) { novas.sort(function (a, b) { return Math.abs(a.n - nv) - Math.abs(b.n - nv); }); return pegar(novas.slice(0, Math.max(20, Math.floor(novas.length / 3)))); }
+    return pegar(rever) || pegar(velhas) || pegar(pool);
+  }
+  /* a próxima pergunta é sorteada enquanto a pessoa lê a explicação; o toque em "Próxima" só troca o texto */
+  var tPrep = null;
+  function preparar() { clearTimeout(tPrep); prox = null; tPrep = setTimeout(function () { prox = escolher(); }, 30); }
+  function proxValida() {
+    return prox && (!atual || prox.id !== atual.id) && selecionadas().indexOf(prox.d) >= 0 && (!S.rapido || prox.tam <= CURTA);
+  }
+
+  /* ---------- telas ---------- */
+  var travaTela = 0;
+  function mostrar(id) {
+    if (tela === id) return;
+    travaTela = Date.now() + 450; tela = id;
+    ['tJogo', 'tMat', 'tLim', 'tAd'].forEach(function (t) { $(t).hidden = t !== id; });
+  }
+  /* o clique que sobra do toque que trocou de tela é descartado; só vale fora do quiz, onde os botões usam clique */
+  document.addEventListener('click', function (ev) { if (Date.now() < travaTela) { ev.stopPropagation(); ev.preventDefault(); } }, true);
+  function placar() {
+    $('pHoje').textContent = S.feitas + '/' + (LIM + S.bonus);
+    $('pSeq').textContent = S.seq;
+    $('pTaxa').textContent = S.feitas ? Math.round(100 * S.certasHoje / S.feitas) + '%' : '–';
+    $('pBarra').style.transform = 'scaleX(' + Math.min(1, S.feitas / (LIM + S.bonus)) + ')';
+  }
+  /* ---------- encaixe: cada caixa tem tamanho fixo; o texto é que se ajusta a ela ---------- */
+  var apertado = false;
+  function transborda(el) { return el.scrollHeight > el.clientHeight + 1; }
+  function encaixar(alvo, caixas, min, max, prop) {
+    /* busca binária do maior tamanho de letra que cabe; 3 ou 4 medições por caixa */
+    var lo = min, hi = max, ok = min;
+    while (lo <= hi) {
+      var m = (lo + hi) >> 1; alvo.style.setProperty(prop, m + 'px');
+      if (caixas.some(transborda)) hi = m - 1; else { ok = m; lo = m + 1; }
+    }
+    alvo.style.setProperty(prop, ok + 'px');
+    var sobra = caixas.some(transborda);
+    caixas.forEach(function (c) { c.classList.toggle('rola', sobra && transborda(c)); c.classList.remove('fim'); });
+    return sobra;
+  }
+  function encaixarPergunta() {
+    var a = encaixar(elEnun, [elEnun], 13, 19, 'font-size');
+    var b = encaixar(elAlts, elTxt, 12, 17, '--fa');
+    apertado = a || b;
+  }
+  function encaixarVeredito() { encaixar(elVT, [elVT], 12, 15, 'font-size'); }
+  function esperaVeredito() {
+    elVer.className = 'veredito vidro espera'; $('vTit').textContent = ''; $('vTxt').textContent = 'A explicação aparece aqui.';
+    elVT.style.fontSize = ''; elVT.classList.remove('rola'); elVT.scrollTop = 0;
+  }
+  /* texto que não coube rola dentro da própria caixa; o esmaecido some quando chega ao fim */
+  document.addEventListener('scroll', function (ev) { var el = ev.target; if (el.classList && el.classList.contains('rola')) el.classList.toggle('fim', el.scrollTop + el.clientHeight >= el.scrollHeight - 2); }, true);
+  window.addEventListener('resize', function () { if (atual && tela === 'tJogo') { encaixarPergunta(); if (respondida) encaixarVeredito(); } });
+
+  function limparPergunta() {
+    atual = null; prox = null; respondida = false; pend = null;
+    elEnun.hidden = true; $('carregando').hidden = false; elAlts.style.visibility = 'hidden'; esperaVeredito();
+    $('mDisc').textContent = ''; $('mTop').textContent = '';
+    elProx.setAttribute('aria-disabled', 'true'); elProx.textContent = 'Carregando…';
+  }
+  function proxima() {
+    viraDia();
+    if (S.feitas >= LIM + S.bonus) { limparPergunta(); telaLimite(); return; }
+    var q = proxValida() ? prox : escolher(); prox = null; clearTimeout(tPrep);
+    if (!q) { limparPergunta(); $('carregando').hidden = false; mostrar('tJogo'); placar(); return; }
+    var primeira = !atual;
+    atual = q; respondida = false; pend = null;
+    if (q.f) { recFam.push(q.f); if (recFam.length > 15) recFam.shift(); }
+    $('mDisc').textContent = NOME[q.d] || q.d; $('mTop').textContent = q.t;
+    for (var p = 0; p < 3; p++) elPts[p].className = p < q.n ? 'on' : '';
+    $('mNiv').setAttribute('aria-label', 'Nível ' + q.n + ' de 3');
+    elEnun.textContent = q.q; elEnun.scrollTop = 0;
+    for (var i = 0; i < 4; i++) { elTxt[i].textContent = q.a[i]; elTxt[i].scrollTop = 0; elAlt[i].className = 'alt'; }
+    elAlts.className = 'alts';
+    esperaVeredito();
+    elProx.setAttribute('aria-disabled', 'true'); elProx.textContent = 'Escolha uma alternativa';
+    if (primeira) { $('carregando').hidden = true; elEnun.hidden = false; elAlts.style.visibility = ''; }
+    if (tela !== 'tJogo') mostrar('tJogo');
+    encaixarPergunta();
+    placar();
+  }
+  function responder(i) {
+    if (respondida || !atual || tela !== 'tJogo') return;
+    respondida = true; tResp = Date.now(); pend = null;
+    var q = atual, ok = i === q.c, d = q.d;
+    /* 1) o que a pessoa vê muda primeiro */
+    for (var k = 0; k < 4; k++) elAlt[k].className = k === q.c ? 'alt certa' : (k === i ? 'alt errada' : 'alt apagada');
+    elAlts.className = 'alts feito';
+    $('vTit').textContent = ok ? 'Certo.' : 'Errado. A resposta é a ' + LETRAS[q.c] + '.';
+    $('vTxt').textContent = q.e;
+    elVer.className = 'veredito vidro ' + (ok ? 'c' : 'e');
+    vibrar(ok);
+    /* 2) depois a contabilidade */
+    var h = hist(d), agora = Math.floor(tResp / 60000), e = h[q.id] || [0, 0, 0, 0];
+    h[q.id] = [agora, e[1] + (ok ? 1 : 0), e[2] + (ok ? 0 : 1), ok ? 1 : 0];
+    S.feitas++; S.total++;
+    if (ok) { S.certasHoje++; S.certas++; S.seq++; if (S.seq > S.melhor) S.melhor = S.seq; } else { S.seq = 0; }
+    var msgNivel = nivel(d, ok);
+    elProx.setAttribute('aria-disabled', 'false'); elProx.textContent = (S.feitas >= LIM + S.bonus) ? 'Ver resultado de hoje' : 'Próxima';
+    $('bSinal').setAttribute('aria-pressed', String(S.flags.indexOf(q.id) >= 0));
+    placar();
+    encaixarVeredito();
+    if (msgNivel) toast(msgNivel);
+    salvarLocal(d);
+    preparar();
+  }
+  function nivel(d, ok) {
+    var nv = S.niv[d] || 1, j = S.jan[d] || (S.jan[d] = []);
+    if (atual.n !== nv) return '';
+    j.push(ok ? 1 : 0); if (j.length > 20) j.shift();
+    var taxa = j.reduce(function (s, x) { return s + x; }, 0) / j.length;
+    if (j.length >= 15 && taxa >= 0.85 && nv < 3) { S.niv[d] = nv + 1; S.jan[d] = []; return 'Você subiu para o nível ' + (nv + 1) + ' em ' + (NOME[d] || d); }
+    if (j.length >= 12 && taxa <= 0.35 && nv > 1) { S.niv[d] = nv - 1; S.jan[d] = []; return 'Voltamos ao nível ' + (nv - 1) + ' em ' + (NOME[d] || d) + ' para reforçar a base'; }
+    return '';
+  }
+  var tToast = null;
+  function toast(msg) { var t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(tToast); tToast = setTimeout(function () { t.hidden = true; }, 2200); }
+
+  function telaLimite() {
+    $('lAcertos').textContent = S.certasHoje + '/' + S.feitas;
+    $('lTexto').textContent = 'acertos hoje (' + (S.feitas ? Math.round(100 * S.certasHoje / S.feitas) : 0) + '%). Maior sequência: ' + S.melhor + '. Amanhã o contador volta a ' + LIM + '.';
+    mostrar('tLim'); placar();
+  }
+  var tAd = null;
+  function anuncio() {
+    adFim = Date.now() + AD_S * 1000; adPago = false;
+    mostrar('tAd'); tickAd();
+    clearInterval(tAd); tAd = setInterval(tickAd, 250);
+  }
+  function tickAd() {
+    var b = $('bAdOk'), resta = Math.max(0, Math.ceil((adFim - Date.now()) / 1000));
+    $('adSeg').textContent = resta; $('adBarra').style.width = Math.min(100, 100 * (AD_S - (adFim - Date.now()) / 1000) / AD_S) + '%';
+    if (resta <= 0) { clearInterval(tAd); tAd = null; b.disabled = false; b.textContent = 'Liberar mais ' + BONUS + ' perguntas'; }
+    else { b.disabled = true; b.textContent = 'Aguarde ' + resta + ' s'; }
+  }
+  function liberar() {
+    if (adPago || Date.now() < adFim) return;
+    adPago = true; $('bAdOk').disabled = true;
+    viraDia(); S.bonus += BONUS; salvarLocal();
+    toast(BONUS + ' perguntas liberadas');
+    proxima();
+  }
+
+  function telaMaterias() {
+    var sel = selecionadas(), box = $('lista'); box.textContent = '';
+    MAN.disciplinas.forEach(function (d) {
+      var h = hist(d.codigo), ids = Object.keys(h), ok = 0, tent = 0;
+      ids.forEach(function (k) { ok += h[k][1]; tent += h[k][1] + h[k][2]; });
+      var l = document.createElement('label'); l.className = 'linha';
+      var n = document.createElement('span'); n.className = 'nome'; n.textContent = d.nome;
+      var det = document.createElement('span'); det.className = 'det';
+      det.textContent = 'Nível ' + (S.niv[d.codigo] || 1) + ' · ' + ids.length + ' de ' + d.total.toLocaleString('pt-BR') + ' vistas' + (tent ? ' · ' + Math.round(100 * ok / tent) + '%' : '');
+      var c = document.createElement('input'); c.type = 'checkbox'; c.className = 'tog'; c.id = 'm-' + d.codigo; c.checked = sel.indexOf(d.codigo) >= 0;
+      c.addEventListener('change', function () { alternar(d.codigo, c); });
+      l.appendChild(n); l.appendChild(det); l.appendChild(c); box.appendChild(l);
+    });
+    $('oRapido').checked = !!S.rapido; $('oVibra').checked = !!S.vibra;
+    $('devInfo').textContent = 'Hoje: ' + S.feitas + ' respondidas de ' + (LIM + S.bonus) + ' liberadas.';
+    desarmar(); aplicarTema();
+    $('resumo').textContent = S.total ? ('No total: ' + S.total.toLocaleString('pt-BR') + ' respostas, ' + Math.round(100 * S.certas / S.total) + '% de acerto, maior sequência de ' + S.melhor + '.') : 'Escolha as matérias que entram no sorteio. O nível sobe sozinho quando você acerta bastante.';
+    mostrar('tMat');
+  }
+  function alternar(cod, caixa) {
+    var sel = selecionadas().slice(), i = sel.indexOf(cod);
+    if (caixa.checked) { if (i < 0) sel.push(cod); } else { if (sel.length <= 1) { caixa.checked = true; toast('Deixe ao menos uma matéria ligada'); return; } sel.splice(i, 1); }
+    S.sel = sel; prox = null; salvarLocal(); montarFila();
+  }
+
+  /* ---------- progresso na conta (db) ---------- */
+  var base = null, dbRef = null, sujo = {}, gravando = false, tSync = null, estadoNuvem = 'aguarda';
+  function marcar(k) { if (!base) return; sujo[k] = 1; if (!tSync) tSync = setTimeout(function () { tSync = null; gravar(); }, 6000); }
+  function gravar() {
+    if (!base || gravando) return; var lote = Object.keys(sujo); if (!lote.length) return;
+    gravando = true; sujo = {};
+    (function passo(i) {
+      if (i >= lote.length || !base) { gravando = false; if (Object.keys(sujo).length && base && !tSync) tSync = setTimeout(function () { tSync = null; gravar(); }, 6000); return; }
+      var k = lote[i], corpo = k === 'estado' ? JSON.parse(JSON.stringify(S)) : { m: H[k.slice(2)] || {} };
+      base.doc(k).set(corpo).then(function () { passo(i + 1); }, function (e) {
+        var cod = e && e.code;
+        if (cod === 'unavailable' || cod === 'resource_exhausted') { sujo[k] = 1; passo(i + 1); }
+        else { base = null; estadoNuvem = 'local'; textoNuvem(); gravando = false; }
+      });
+    })(0);
+  }
+  function textoNuvem() {
+    $('nuvem').textContent = estadoNuvem === 'ok' ? 'Progresso guardado na sua conta: continua igual no celular e no computador.'
+      : estadoNuvem === 'lenta' ? 'A conta demorou a responder. Por enquanto o progresso fica só neste aparelho.'
+      : estadoNuvem === 'aguarda' ? 'Verificando onde o progresso será guardado…'
+      : 'Progresso guardado só neste aparelho.';
+  }
+  function mesclar(r) {
+    if (r.e && (r.e.atualizado || 0) > (S.atualizado || 0)) {
+      var sel = S.sel, tema = S.tema, vib = S.vibra;
+      S = Object.assign(novoEstado(), r.e); delete S.auto; delete S.fita;
+      if (!S.sel) S.sel = sel; if (r.e.tema === undefined) S.tema = tema; if (r.e.vibra === undefined) S.vibra = vib;
+      ls.set('cq1-estado', S); aplicarTema();
+    }
+    else if ((S.atualizado || 0) > ((r.e && r.e.atualizado) || 0)) sujo.estado = 1;
+    MAN.disciplinas.forEach(function (d) {
+      var c = d.codigo, loc = hist(c), rem = r.hs[c] || {}, mudouLocal = false, faltaRemoto = false;
+      var corte = Math.floor((S.zerado || 0) / 60000);
+      Object.keys(rem).forEach(function (id) { if (rem[id][0] < corte) { faltaRemoto = true; return; } if (!loc[id] || rem[id][0] > loc[id][0]) { loc[id] = rem[id]; mudouLocal = true; } });
+      Object.keys(loc).forEach(function (id) { if (!rem[id] || loc[id][0] > rem[id][0]) faltaRemoto = true; });
+      if (mudouLocal) ls.set('cq1-h-' + c, loc);
+      if (faltaRemoto) sujo['h-' + c] = 1;
+    });
+    viraDia(); placar();
+    if (tela === 'tMat') telaMaterias();
+    if (Object.keys(sujo).length && !tSync) tSync = setTimeout(function () { tSync = null; gravar(); }, 3000);
+  }
+  function ligarNuvem() {
+    if (!window.claude || !window.claude.use) { estadoNuvem = 'local'; textoNuvem(); return; }
+    Promise.all([window.claude.use('db'), window.claude.use('user')]).then(function (x) {
+      var db = x[0], user = x[1];
+      if (!db || !user) { estadoNuvem = 'local'; textoNuvem(); return; }
+      return user.id().then(function (uid) {
+        if (!uid) { estadoNuvem = 'local'; textoNuvem(); return; }
+        dbRef = db; var col = db.collection('data/users/' + uid);
+        var ler = Promise.all([col.doc('estado').get()].concat(MAN.disciplinas.map(function (d) { return col.doc('h-' + d.codigo).get(); }))).then(function (ss) {
+          var hs = {}; MAN.disciplinas.forEach(function (d, i) { var s = ss[i + 1]; if (s.exists) hs[d.codigo] = (s.data() || {}).m || {}; });
+          return { e: ss[0].exists ? ss[0].data() : null, hs: JSON.parse(JSON.stringify(hs)) };
+        });
+        var limite = new Promise(function (res) { setTimeout(function () { res(null); }, 10000); });
+        return Promise.race([ler, limite]).then(function (r) {
+          if (!r) { estadoNuvem = 'lenta'; textoNuvem(); return; }
+          base = col; estadoNuvem = 'ok'; mesclar(r); textoNuvem();
+        });
+      });
+    }).catch(function () { estadoNuvem = 'local'; base = null; textoNuvem(); });
+  }
+  function sinalizar() {
+    if (!atual) return; var id = atual.id, i = S.flags.indexOf(id), q = atual;
+    if (i >= 0) S.flags.splice(i, 1); else S.flags.push(id);
+    salvarLocal();
+    $('bSinal').setAttribute('aria-pressed', String(i < 0));
+    if (dbRef) { var ref = dbRef.doc('sinalizadas/q' + id); (i >= 0 ? ref.delete() : ref.set({ id: id, disciplina: q.d, topico: q.t, em: Date.now() })).catch(function () {}); }
+    toast(i >= 0 ? 'Sinalização removida' : 'Pergunta sinalizada para revisão');
+  }
+
+  /* ---------- botões de teste ---------- */
+  var tArma = null;
+  function desarmar() { clearTimeout(tArma); var b = $('bZerarTudo'); b.classList.remove('armado'); b.textContent = 'Começar do zero'; }
+  function zerarDia() {
+    S.dia = hoje(); S.feitas = 0; S.bonus = 0; S.certasHoje = 0; S.seq = 0;
+    adPago = false; adFim = 0; clearInterval(tAd); tAd = null;
+    salvarLocal(); descarregar(); gravarJa();
+  }
+  function zerarTudo() {
+    var b = $('bZerarTudo');
+    if (!b.classList.contains('armado')) { b.classList.add('armado'); b.textContent = 'Tocar de novo'; clearTimeout(tArma); tArma = setTimeout(desarmar, 4000); return; }
+    desarmar();
+    var sel = S.sel, rap = S.rapido, tema = S.tema, vib = S.vibra;
+    S = novoEstado(); S.sel = sel; S.rapido = rap; S.tema = tema; S.vibra = vib; S.zerado = Date.now();
+    H = {}; recFam = [];
+    MAN.disciplinas.forEach(function (d) { H[d.codigo] = {}; ls.set('cq1-h-' + d.codigo, {}); if (base) sujo['h-' + d.codigo] = 1; });
+    zerarDia();
+    toast('Tudo zerado. Começando do zero');
+    limparPergunta(); proxima();
+  }
+  function gravarJa() { if (!base) return; sujo.estado = 1; clearTimeout(tSync); tSync = null; gravar(); }
+
+  /* ---------- toque: a resposta vale no instante em que o dedo encosta ---------- */
+  function movido(ev) { return Math.abs(ev.clientX - xDown) > 12 || Math.abs(ev.clientY - yDown) > 12; }
+  document.addEventListener('pointerdown', function (ev) { tDown = Date.now(); xDown = ev.clientX; yDown = ev.clientY; }, true);
+  elAlts.addEventListener('pointerdown', function (ev) {
+    if (respondida || !atual) return;
+    if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+    var b = ev.target.closest ? ev.target.closest('.alt') : null; if (!b) return;
+    var i = +b.getAttribute('data-i');
+    /* se a pergunta cabe na tela, não há rolagem para confundir com toque: responde já.
+       se não cabe, espera o dedo levantar sem ter arrastado. */
+    if (ev.pointerType === 'mouse' || !apertado) responder(i);
+    else pend = { i: i, id: ev.pointerId };
+  });
+  elAlts.addEventListener('pointerup', function (ev) {
+    if (!pend || pend.id !== ev.pointerId) return;
+    var p = pend; pend = null;
+    var b = ev.target.closest ? ev.target.closest('.alt') : null;
+    if (b && +b.getAttribute('data-i') === p.i && !movido(ev)) responder(p.i);
+  });
+  elAlts.addEventListener('pointercancel', function () { pend = null; });
+  elAlts.addEventListener('click', function (ev) {
+    if (ev.detail !== 0) return; /* teclado e leitores de tela */
+    var b = ev.target.closest ? ev.target.closest('.alt') : null; if (b) responder(+b.getAttribute('data-i'));
+  });
+  function avancar() { if (respondida && tela === 'tJogo') proxima(); }
+  elProx.addEventListener('pointerdown', function (ev) { if (ev.pointerType === 'mouse' && ev.button !== 0) return; avancar(); });
+  elProx.addEventListener('click', function (ev) { if (ev.detail === 0) avancar(); });
+  /* depois de responder, um toque em qualquer ponto da pergunta também avança (menos na explicação e no botão) */
+  elJogo.addEventListener('pointerup', function (ev) {
+    if (!respondida || tela !== 'tJogo' || tDown < tResp + 400 || movido(ev)) return;
+    if (ev.target.closest && ev.target.closest('.veredito, .pe')) return;
+    proxima();
+  });
+
+  /* ---------- demais eventos ---------- */
+  $('bMaterias').addEventListener('click', function () { if (!MAN) return; if (tela === 'tMat') voltar(); else if (tela !== 'tAd') telaMaterias(); });
+  $('bTema').addEventListener('click', function () { S.tema = temaEscuroAgora() ? 'light' : 'dark'; aplicarTema(); salvarLocal(); });
+  $('seg').addEventListener('click', function (ev) { var b = ev.target.closest('button'); if (!b) return; S.tema = b.getAttribute('data-tema'); aplicarTema(); salvarLocal(); });
+  function voltar() { if (respondida || !atual) proxima(); else { mostrar('tJogo'); placar(); } }
+  $('bVoltar').addEventListener('click', voltar);
+  $('bLimMat').addEventListener('click', telaMaterias);
+  $('bAnuncio').addEventListener('click', anuncio);
+  $('bAdOk').addEventListener('click', liberar);
+  $('bZerarDia').addEventListener('click', function () { zerarDia(); toast('Contador de hoje zerado'); limparPergunta(); proxima(); });
+  $('bZerarTudo').addEventListener('click', zerarTudo);
+  $('bSinal').addEventListener('click', sinalizar);
+  $('oRapido').addEventListener('change', function () { S.rapido = this.checked; prox = null; salvarLocal(); });
+  $('oVibra').addEventListener('change', function () { S.vibra = this.checked; salvarLocal(); if (S.vibra) { vibrar(true); soltarHap(); } });
+  document.addEventListener('keydown', function (ev) {
+    if (tela !== 'tJogo' || !atual || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    var k = ev.key.toLowerCase(), i = '1234'.indexOf(k); if (i < 0) i = 'abcd'.indexOf(k);
+    if (k.length === 1 && i >= 0 && !respondida) responder(i);
+    else if ((k === 'enter' || k === ' ' || k === 'arrowright') && respondida) { ev.preventDefault(); proxima(); }
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') { descarregar(); clearTimeout(tSync); tSync = null; gravar(); }
+    else { viraDia(); placar(); if (tela === 'tAd') { tickAd(); if (!tAd && Date.now() < adFim) tAd = setInterval(tickAd, 250); } }
+  });
+  window.addEventListener('pagehide', descarregar);
+  window.cqTeste = function (q) { atual = q; respondida = false; elEnun.hidden = false; $('carregando').hidden = true; elAlts.style.visibility = ''; elEnun.textContent = q.q; for (var i = 0; i < 4; i++) elTxt[i].textContent = q.a[i]; encaixarPergunta(); $('vTit').textContent = 'Errado. A resposta é a D.'; $('vTxt').textContent = q.e; encaixarVeredito(); return [apertado, elVT.classList.contains('rola'), elEnun.style.fontSize, elAlts.style.getPropertyValue('--fa'), elVT.style.fontSize]; };
+
+  /* ---------- início ---------- */
+  aplicarTema(); viraDia(); placar();
+  fetch('pacotes/manifest.json').then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (m) {
+    MAN = m; m.disciplinas.forEach(function (d) { NOME[d.codigo] = d.nome; });
+    montarFila(); ligarNuvem();
+  }).catch(function () {
+    var c = $('carregando'); c.textContent = '';
+    var h = document.createElement('h2'); h.textContent = 'Não consegui carregar as perguntas';
+    var p = document.createElement('p'); p.textContent = 'Verifique a conexão e abra a página de novo.';
+    c.appendChild(h); c.appendChild(p);
+  });
+})();
+</script>
+</body></html>
