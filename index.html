@@ -1012,12 +1012,17 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     return pior ? (NOME[pior.cod] || pior.cod) : '';
   }
   var LINK_QUIZ = 'https://brunoquinta.github.io/quiz-concursos/';
-  function compartilhar(origem, texto) {
+  /* Um texto só, com o link uma vez. O iOS e vários apps no Android juntam text e url, então o campo url duplicava o endereço. */
+  function textoComLink(frase) {
+    var base = String(frase || '').split(LINK_QUIZ).join(' ').replace(/\s+/g, ' ').trim();
+    return base + ' ' + LINK_QUIZ;
+  }
+  function compartilhar(origem, frase) {
     metrica('share/' + origem);
-    var completo = texto.indexOf('http') >= 0 ? texto : (texto + ' ' + LINK_QUIZ);
+    var completo = textoComLink(frase);
     try {
       if (navigator.share) {
-        navigator.share({ text: completo, url: LINK_QUIZ }).catch(function () {});
+        navigator.share({ text: completo }).catch(function () {});
         return;
       }
     } catch (e) {}
@@ -1029,7 +1034,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     var b = bloco();
     var ac = b.n ? b.ok : S.certasHoje;
     var tot = b.n || S.feitas || LIM;
-    return 'Fiz ' + ac + '/' + tot + ' no Quiz Concursos hoje! ' + LINK_QUIZ;
+    return 'Fiz ' + ac + '/' + tot + ' no Quiz Concursos hoje!';
   }
   function mostrarSemErros() {
     limparPergunta();
@@ -1812,7 +1817,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   $('bShareLim').addEventListener('click', function () { compartilhar('rodada', textoRodada()); });
   $('bShareTrofeu').addEventListener('click', function () {
     var nome = trofeuAberto ? trofeuAberto.nome : 'um troféu';
-    compartilhar('trofeu', 'Conquistei o troféu ' + nome + ' no Quiz Concursos! ' + LINK_QUIZ);
+    compartilhar('trofeu', 'Conquistei o troféu ' + nome + ' no Quiz Concursos!');
   });
   $('bPremiumMenu').addEventListener('click', function () { abrirPremium('tMat'); });
   $('bPremiumLim').addEventListener('click', function () { abrirPremium('tLim'); });
