@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://gc.zgo.at; style-src 'self' 'unsafe-inline'; connect-src 'self' https://brunoquinta.goatcounter.com; img-src 'self' data: https://brunoquinta.goatcounter.com; object-src 'none'; base-uri 'self'; form-action 'none'"><meta name="referrer" content="no-referrer"><title>Quiz de Concursos Piloto</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="icon" href="favicon.ico" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png"><style>body{margin:0}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://gc.zgo.at; style-src 'self' 'unsafe-inline'; connect-src 'self' https://brunoquinta.goatcounter.com; img-src 'self' data: https://brunoquinta.goatcounter.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'"><meta name="referrer" content="no-referrer"><meta name="theme-color" content="#0a6cff"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Quiz Concursos"><meta name="apple-mobile-web-app-status-bar-style" content="default"><title>Quiz de Concursos Piloto</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="icon" href="favicon.ico" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png"><style>body{margin:0}[hidden]{display:none!important}</style></head><body>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Layout: uma tela de app, coluna única centrada de até 560px. Cápsula de vidro no topo (botão | 3 números | botão),
@@ -15,7 +15,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #060914; --ink: #f1f4fb; --muted: #9aa6c2;
+    --bg: #060914; --ink: #f4f7fd; --muted: #c5d0e6;
     --glass: rgba(255,255,255,.075); --glass-2: rgba(255,255,255,.13);
     --edge: rgba(255,255,255,.16); --hair: rgba(255,255,255,.14); --shadow: 0 8px 28px rgba(0,0,0,.45);
     --accent: #3f8cff; --on-accent: #ffffff; --accent-fill: rgba(63,140,255,.18);
@@ -25,7 +25,7 @@
   }
 }
 :root[data-theme="dark"] {
-  --bg: #060914; --ink: #f1f4fb; --muted: #9aa6c2;
+  --bg: #060914; --ink: #f4f7fd; --muted: #c5d0e6;
   --glass: rgba(255,255,255,.075); --glass-2: rgba(255,255,255,.13);
   --edge: rgba(255,255,255,.16); --hair: rgba(255,255,255,.14); --shadow: 0 8px 28px rgba(0,0,0,.45);
   --accent: #3f8cff; --on-accent: #ffffff; --accent-fill: rgba(63,140,255,.18);
@@ -107,7 +107,18 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .pts { display: inline-flex; gap: 4px; }
 .pts i { width: 7px; height: 7px; border-radius: 50%; background: var(--hair); }
 .pts i.on { background: var(--accent); }
-.enun { width: 100%; max-height: 100%; overflow: hidden; font-size: 18px; line-height: 1.32; font-weight: 600; letter-spacing: -0.01em; white-space: pre-wrap; overflow-wrap: break-word; text-wrap: pretty; text-align: justify; -webkit-hyphens: auto; hyphens: auto; }
+.enun { width: 100%; max-height: 100%; overflow: hidden; font-size: 18px; line-height: 1.32; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); white-space: pre-wrap; overflow-wrap: break-word; text-wrap: pretty; text-align: justify; -webkit-hyphens: auto; hyphens: auto; }
+.dias { margin: -8px 8px 0; text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .02em; color: var(--accent); }
+#pHoje { font-size: 15px; }
+.reportar { flex: 1 0 100%; text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); text-decoration: underline; min-height: 28px; }
+#tJogo .pe { flex-wrap: wrap; }
+.folha { position: fixed; inset: 0; z-index: 25; display: grid; align-items: end; }
+.folha[hidden] { display: none; }
+.folha-fundo { position: absolute; inset: 0; background: rgba(12,18,36,.28); }
+.folha-caixa { position: relative; margin: 0 auto 18px; width: min(420px, calc(100% - 24px)); border-radius: 22px; padding: 14px; display: flex; flex-direction: column; gap: 8px; background: var(--glass-2); }
+.folha-caixa button { min-height: 44px; border-radius: 14px; background: var(--glass); font-weight: 650; }
+:root[data-theme="dark"] .trofeu.bloqueado, :root:not([data-theme="light"]) .trofeu.bloqueado { opacity: .72; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .trofeu.bloqueado { opacity: .72; } }
 .enun.rola, .alt .txt.rola, .vtexto.rola { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: none;
   -webkit-mask-image: linear-gradient(#000 72%, transparent); mask-image: linear-gradient(#000 72%, transparent); }
 .rola.fim { -webkit-mask-image: none; mask-image: none; }
@@ -172,6 +183,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
 /* limite e anúncio */
 .grande { font-weight: 800; font-size: 60px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
 .cartao { border-radius: var(--r); padding: 20px; display: flex; flex-direction: column; gap: 8px; text-align: center; }
+.cartao .btn { flex: none; width: 100%; }
 .barra { height: 6px; border-radius: 99px; background: var(--hair); overflow: hidden; margin-top: 14px; }
 .barra i { display: block; height: 100%; width: 0; background: var(--accent); }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(84px + env(safe-area-inset-top, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; max-width: calc(100% - 32px); text-align: center; z-index: 5; pointer-events: none; }
@@ -195,6 +207,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     </button>
     <div class="prog" aria-hidden="true"><i id="pBarra"></i></div>
   </header>
+  <p class="dias" id="pDias" hidden></p>
 
   <!-- QUIZ -->
   <main class="tela jogo" id="tJogo">
@@ -217,6 +230,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
         <button class="bandeira" id="bSinal" type="button" aria-pressed="false" aria-label="Sinalizar pergunta com problema"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 18V3h9l-1.5 3.5L14 10H5"/></svg></button>
       </div>
     <div class="pe">
+      <button class="reportar" id="bReportar" type="button" hidden>Reportar questão</button>
       <button class="btn" id="bProx" type="button" aria-disabled="true">Escolha uma alternativa</button>
     </div>
   </main>
@@ -230,6 +244,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       <div class="rot">Ritmo</div>
       <div class="grupo vidro">
         <label class="linha"><span class="nome">Modo rápido</span><span class="det">Só perguntas curtas</span><input class="tog" type="checkbox" id="oRapido"></label>
+        <label class="linha"><span class="nome">Revisar meus erros</span><span class="det">Só o que você errou e ainda não acertou</span><input class="tog" type="checkbox" id="oRevisar"></label>
         <label class="linha"><span class="nome">Vibração</span><span class="det">Toque leve ao responder</span><input class="tog" type="checkbox" id="oVibra"></label>
       </div>
       <div class="rot">Aparência</div>
@@ -254,7 +269,8 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
         </div>
         <span class="aviso">"Zerar hoje" libera de novo as 20 do dia. "Começar do zero" também apaga histórico, níveis e sequências. Este quadro sai na versão oficial.</span>
       </div>
-      <p class="aviso centro" id="avisoMetrica" hidden>Coletamos apenas estatísticas anônimas de uso, sem cookies e sem dados pessoais.</p>
+      <button class="linkbtn" id="bPremiumMenu" type="button">Seja Premium</button>
+      <p class="aviso centro" id="avisoMetrica" hidden>Coletamos apenas estatísticas anônimas de uso, sem cookies, sem e-mail e sem dados pessoais.</p>
       <p class="aviso centro">Piloto v4 · banco v1.1</p>
     </div>
     <div class="pe"><button class="btn" id="bVoltar" type="button">Voltar ao quiz</button></div>
@@ -267,14 +283,42 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       <div class="cartao vidro">
         <div class="grande" id="lAcertos">0</div>
         <div class="aviso" id="lTexto"></div>
+        <div class="aviso" id="lResumo"></div>
+        <button class="btn sec" id="bRevisar" type="button" hidden>Revisar erros</button>
+        <button class="btn sec" id="bShareLim" type="button">Compartilhar</button>
       </div>
       <div class="cartao vidro" id="cartaoAd">
         <b>Quer continuar?</b>
         <span class="aviso" id="avisoInterrompido" hidden>O anúncio foi interrompido. Assista novamente até o fim para liberar mais 20 perguntas.</span>
         <span class="aviso" id="adOferta">Assista a um anúncio de 30 segundos e libere mais 20 perguntas. No site, o anúncio é uma contagem. Pode repetir quando esta rodada acabar.</span>
+        <button class="linkbtn" id="bPremiumLim" type="button">Seja Premium</button>
       </div>
     </div>
     <div class="pe"><button class="btn sec" id="bLimMat" type="button">Matérias</button><button class="btn" id="bAnuncio" type="button">Ver anúncio</button></div>
+  </section>
+
+  <section class="tela" id="tRev" hidden>
+    <div class="rolo">
+      <h1>Erros desta rodada</h1>
+      <p class="aviso centro">Só para olhar. Nada aqui muda o placar.</p>
+      <div id="revLista"></div>
+    </div>
+    <div class="pe"><button class="btn" id="bRevVoltar" type="button">Voltar</button></div>
+  </section>
+
+  <section class="tela" id="tPrem" hidden>
+    <div class="rolo">
+      <h1>Seja Premium</h1>
+      <p class="aviso centro">Um teste de interesse. Ainda não há cobrança.</p>
+      <div class="cartao vidro">
+        <b>O que está planejado</b>
+        <span class="aviso">Sem anúncios.</span>
+        <span class="aviso">Perguntas ilimitadas.</span>
+        <span class="aviso">Estatísticas do seu treino.</span>
+      </div>
+      <p class="aviso centro" id="premObrigado" hidden>Obrigado! Avisaremos quando estiver disponível.</p>
+    </div>
+    <div class="pe"><button class="btn sec" id="bPremVoltar" type="button">Agora não</button><button class="btn" id="bPremInteresse" type="button">Quero ser avisado</button></div>
   </section>
 
   <!-- ANÚNCIO SIMULADO -->
@@ -291,6 +335,16 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   </section>
 </div>
 <div class="toast" id="toast" hidden role="status"></div>
+<div class="folha" id="folhaReportar" hidden>
+  <button type="button" class="folha-fundo" id="bReportarFecha" aria-label="Fechar"></button>
+  <div class="folha-caixa vidro" role="dialog" aria-label="Reportar questão">
+    <b>O que há de errado?</b>
+    <button type="button" data-motivo="gabarito">Gabarito errado</button>
+    <button type="button" data-motivo="confuso">Enunciado confuso</button>
+    <button type="button" data-motivo="desatualizada">Desatualizada</button>
+    <button type="button" data-motivo="outro">Outro</button>
+  </div>
+</div>
 <div class="trofeu-modal" id="trofeuModal" hidden>
   <button type="button" class="trofeu-fundo" id="trofeuFundo" aria-label="Fechar troféu"></button>
   <div class="trofeu-cartao vidro" role="dialog" aria-modal="true" aria-labelledby="trofeuNome">
@@ -300,6 +354,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     <span class="aviso" id="trofeuCrit"></span>
     <div class="trofeu-barra" id="trofeuBarraBox"><i id="trofeuBarra"></i></div>
     <span class="trofeu-prog" id="trofeuProg"></span>
+    <button class="btn sec" id="bShareTrofeu" type="button" hidden>Compartilhar</button>
   </div>
 </div>
 
@@ -361,7 +416,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { aoFalharGravacao(); return false; } }
   };
   function novoEstado() {
-    return { v: 1, dia: hoje(), feitas: 0, bonus: 0, adPago: false, certasHoje: 0, seq: 0, melhor: 0, total: 0, certas: 0, niv: {}, jan: {}, sel: null, rapido: false, vibra: true, tema: 'auto', flags: [], fixa: null, atualizado: 0, zerado: 0 };
+    return { v: 1, dia: hoje(), feitas: 0, bonus: 0, adPago: false, certasHoje: 0, seq: 0, melhor: 0, total: 0, certas: 0, niv: {}, jan: {}, sel: null, rapido: false, revisar: false, vibra: true, tema: 'auto', flags: [], fixa: null, bloco: null, atualizado: 0, zerado: 0 };
   }
   /* no máximo um bônus de +20 por dia local; o flag fica no mesmo estado já gravado */
   /* O bônus acumula de 20 em 20, sem teto por enquanto. adPago antigo não trava mais o dia. */
@@ -393,7 +448,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
 
   function viraDia() {
     if (S.dia === hoje()) return false;
-    S.dia = hoje(); S.feitas = 0; S.bonus = 0; S.adPago = false; S.certasHoje = 0;
+    S.dia = hoje(); S.feitas = 0; S.bonus = 0; S.adPago = false; S.certasHoje = 0; S.bloco = blocoNovo();
     if (T) { T.rodada = 0; T.naRodada = 0; salvarTrofeus(); }
     salvarLocal();
     return true;
@@ -402,7 +457,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   function checarDia() {
     if (!viraDia()) return false;
     placar();
-    if (tela === 'tLim' || tela === 'tAd') {
+    if (tela === 'tLim' || tela === 'tAd' || tela === 'tRev' || tela === 'tPrem') {
       clearInterval(tAd); tAd = null; adFim = 0;
       proxima();
       return true;
@@ -453,6 +508,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   }
   function vibrar(ok) {
     if (!S.vibra) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (navigator.vibrate) { try { navigator.vibrate(ok ? 12 : [14, 45, 14]); } catch (e) {} }
     else hapPend = ok ? 1 : 2;
   }
@@ -625,7 +681,25 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     }
     return pegar(c.rever) || pegar(c.velhas) || null;
   }
+  function escolherErros() {
+    var agora = Math.floor(Date.now() / 60000);
+    var ds = selecionadas().filter(function (d) { return POOL[d] && POOL[d].length; });
+    for (var i = ds.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var tmp = ds[i]; ds[i] = ds[j]; ds[j] = tmp; }
+    for (var k = 0; k < ds.length; k++) {
+      var h = hist(ds[k]);
+      var lista = (POOL[ds[k]] || []).filter(function (q) {
+        if (S.rapido && q.tam > CURTA) return false;
+        if (atual && q.id === atual.id) return false;
+        var e = h[q.id];
+        return e && e[3] === 0 && (e[2] || 0) > 0 && agora - e[0] >= REVER_MIN;
+      });
+      var q = pegar(lista);
+      if (q) return q;
+    }
+    return null;
+  }
   function escolher() {
+    if (S.revisar) return escolherErros();
     var d = sorteiaDisc(); if (!d) return null;
     var q = daLista(candidatos(d));
     if (q) return q;
@@ -637,8 +711,13 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   /* a próxima pergunta é sorteada enquanto a pessoa lê a explicação; o toque em "Próxima" só troca o texto */
   var tPrep = null;
   function preparar() { clearTimeout(tPrep); prox = null; tPrep = setTimeout(function () { prox = escolher(); }, 30); }
+  function ehErroPendente(q) {
+    if (!q) return false;
+    var e = hist(q.d)[q.id];
+    return !!(e && e[3] === 0 && (e[2] || 0) > 0);
+  }
   function proxValida() {
-    return prox && (!atual || prox.id !== atual.id) && selecionadas().indexOf(prox.d) >= 0 && (!S.rapido || prox.tam <= CURTA);
+    return prox && (!atual || prox.id !== atual.id) && selecionadas().indexOf(prox.d) >= 0 && (!S.rapido || prox.tam <= CURTA) && (!S.revisar || ehErroPendente(prox));
   }
 
   /* ---------- telas ---------- */
@@ -646,15 +725,22 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   function mostrar(id) {
     if (tela === id) return;
     travaTela = Date.now() + 450; tela = id;
-    ['tJogo', 'tMat', 'tLim', 'tAd'].forEach(function (t) { $(t).hidden = t !== id; });
+    ['tJogo', 'tMat', 'tLim', 'tAd', 'tRev', 'tPrem'].forEach(function (t) { $(t).hidden = t !== id; });
   }
   /* o clique que sobra do toque que trocou de tela é descartado; só vale fora do quiz, onde os botões usam clique */
   document.addEventListener('click', function (ev) { if (Date.now() < travaTela) { ev.stopPropagation(); ev.preventDefault(); } }, true);
   function placar() {
-    $('pHoje').textContent = S.feitas + '/' + (LIM + S.bonus);
+    var meta = LIM + (S.bonus || 0);
+    $('pHoje').textContent = S.feitas + ' de ' + meta;
     $('pSeq').textContent = S.seq;
     $('pTaxa').textContent = S.feitas ? Math.round(100 * S.certasHoje / S.feitas) + '%' : '–';
-    $('pBarra').style.transform = 'scaleX(' + Math.min(1, S.feitas / (LIM + S.bonus)) + ')';
+    $('pBarra').style.transform = 'scaleX(' + Math.min(1, meta ? S.feitas / meta : 0) + ')';
+    var dias = $('pDias');
+    if (dias) {
+      var n = T && T.dias ? T.dias : 0;
+      dias.hidden = n < 2;
+      dias.textContent = n + (n === 1 ? ' dia seguido' : ' dias seguidos');
+    }
   }
   /* ---------- encaixe: cada caixa tem tamanho fixo; o texto é que se ajusta a ela ---------- */
   var apertado = false;
@@ -770,7 +856,9 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       $('bSinal').setAttribute('aria-pressed', String(S.flags.indexOf(q.id) >= 0));
       elProx.setAttribute('aria-disabled', 'false');
       elProx.textContent = (S.feitas >= LIM + S.bonus) ? 'Ver resultado de hoje' : 'Próxima';
+      if ($('bReportar')) $('bReportar').hidden = false;
     }
+    if (!respondida && $('bReportar')) $('bReportar').hidden = true;
     $('carregando').hidden = true; elEnun.hidden = false; elAlts.style.visibility = '';
     if (tela !== 'tJogo') mostrar('tJogo');
     encaixarPergunta();
@@ -800,6 +888,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     if (!q) {
       if (cargaAtiva() || !MAN) { limparPergunta(); mostrar('tJogo'); placar(); return; }
       if (!temPerguntas()) { mostrarErroCarga(); return; }
+      if (S.revisar) { mostrarSemErros(); return; }
       mostrarSemPergunta(); return;
     }
     S.fixa = { id: q.id, d: q.d, resp: null };
@@ -820,6 +909,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     $('vTxt').textContent = q.e;
     elVer.className = 'veredito vidro ' + (ok ? 'c' : 'e');
     vibrar(ok);
+    if ($('bReportar')) $('bReportar').hidden = false;
     /* 2) depois a contabilidade */
     var h = hist(d), agora = Math.floor(tResp / 60000), tinha = h[q.id], e = tinha || [0, 0, 0, 0];
     h[q.id] = [agora, e[1] + (ok ? 1 : 0), e[2] + (ok ? 0 : 1), ok ? 1 : 0];
@@ -834,7 +924,9 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     S.fixa = { id: q.id, d: q.d, resp: i };
     salvarLocal(d);
     descarregar();
-    avaliarResposta(q, ok, tinha, tMostrada ? tResp - tMostrada : -1);
+    var durBloco = tMostrada ? tResp - tMostrada : 0;
+    anotarBloco(q, ok, i, durBloco);
+    avaliarResposta(q, ok, tinha, durBloco > 0 ? durBloco : -1);
     metrica('resp/' + trilha(d) + '/' + (ok ? 'acerto' : 'erro'));
     if (!ok) metrica('errada/' + trilha(q.id));
     preparar();
@@ -857,9 +949,109 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     toast('Não consegui salvar o progresso neste aparelho.');
   }
 
+  function blocoNovo() { return { n: 0, ok: 0, ms: 0, mats: {}, erros: [] }; }
+  function bloco() {
+    if (!S.bloco || typeof S.bloco !== 'object') S.bloco = blocoNovo();
+    if (!S.bloco.mats) S.bloco.mats = {};
+    if (!Array.isArray(S.bloco.erros)) S.bloco.erros = [];
+    return S.bloco;
+  }
+  function anotarBloco(q, ok, resp, dur) {
+    var b = bloco();
+    b.n = (b.n || 0) + 1;
+    if (ok) b.ok = (b.ok || 0) + 1;
+    if (dur > 0 && dur < 120000) b.ms = (b.ms || 0) + dur;
+    var par = b.mats[q.d] || (b.mats[q.d] = [0, 0]);
+    if (ok) par[0]++; else par[1]++;
+    if (!ok && b.erros.length < 40) b.erros.push({ id: q.id, d: q.d, resp: resp });
+  }
+  function materiaFraca(b) {
+    var pior = null;
+    Object.keys(b.mats || {}).forEach(function (cod) {
+      var par = b.mats[cod] || [0, 0], ok = par[0] || 0, err = par[1] || 0, tot = ok + err;
+      if (!err) return;
+      var taxa = tot ? ok / tot : 1;
+      if (!pior || taxa < pior.taxa || (taxa === pior.taxa && err > pior.err)) pior = { cod: cod, taxa: taxa, err: err };
+    });
+    return pior ? (NOME[pior.cod] || pior.cod) : '';
+  }
+  var LINK_QUIZ = 'https://brunoquinta.github.io/quiz-concursos/';
+  function compartilhar(origem, texto) {
+    metrica('share/' + origem);
+    var completo = texto.indexOf('http') >= 0 ? texto : (texto + ' ' + LINK_QUIZ);
+    try {
+      if (navigator.share) {
+        navigator.share({ text: completo, url: LINK_QUIZ }).catch(function () {});
+        return;
+      }
+    } catch (e) {}
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(completo).then(function () { toast('Texto copiado'); }, function () { toast('Não consegui copiar'); });
+    } else toast(completo);
+  }
+  function textoRodada() {
+    var b = bloco();
+    var ac = b.n ? b.ok : S.certasHoje;
+    var tot = b.n || S.feitas || LIM;
+    return 'Fiz ' + ac + '/' + tot + ' no Quiz Concursos hoje! ' + LINK_QUIZ;
+  }
+  function mostrarSemErros() {
+    limparPergunta();
+    preencherVazio('Nenhum erro pendente', 'Quando você errar uma questão, ela volta aqui até você acertar.');
+    elProx.setAttribute('aria-disabled', 'true');
+    elProx.textContent = 'Sem erros para revisar';
+    mostrar('tJogo'); placar();
+  }
+  function revisarRodada() {
+    var box = $('revLista'); if (!box) return;
+    box.textContent = '';
+    var erros = bloco().erros || [];
+    if (!erros.length) { box.textContent = ''; var p = document.createElement('p'); p.className = 'aviso centro'; p.textContent = 'Nenhum erro nesta rodada.'; box.appendChild(p); }
+    erros.forEach(function (e) {
+      var q = buscarQuestao(e.id, e.d);
+      var card = document.createElement('div'); card.className = 'cartao vidro';
+      var tit = document.createElement('b'); tit.textContent = (NOME[e.d] || e.d) + (q ? ' · ' + q.t : '');
+      var en = document.createElement('p'); en.textContent = q ? q.q : 'Questão ' + e.id;
+      var certo = document.createElement('p');
+      certo.textContent = q ? ('Resposta: ' + LETRAS[q.c] + '. ' + q.a[q.c]) : 'A explicação volta quando o pacote estiver carregado.';
+      var exp = document.createElement('p'); exp.className = 'aviso'; if (q) exp.textContent = q.e;
+      card.appendChild(tit); card.appendChild(en); card.appendChild(certo); if (q) card.appendChild(exp);
+      box.appendChild(card);
+    });
+    mostrar('tRev');
+  }
+  var premiumAvisado = false;
+  function abrirPremium(voltar) {
+    premiumVolta = voltar || 'tMat';
+    metrica('premium/visto');
+    if ($('premObrigado')) $('premObrigado').hidden = !premiumAvisado;
+    if ($('bPremInteresse')) $('bPremInteresse').hidden = premiumAvisado;
+    mostrar('tPrem');
+  }
+  var premiumVolta = 'tMat';
+  function fecharReportar() { var f = $('folhaReportar'); if (f) f.hidden = true; }
+  function reportar(motivo) {
+    if (!atual) return;
+    var id = trilha(atual.id);
+    if (!id) return;
+    metrica('report/' + motivo + '/' + id);
+    fecharReportar();
+    toast('Registrado. Obrigado.');
+  }
   function telaLimite() {
-    $('lAcertos').textContent = S.certasHoje + '/' + S.feitas;
-    $('lTexto').textContent = 'acertos nesta rodada (' + (S.feitas ? Math.round(100 * S.certasHoje / S.feitas) : 0) + '%). Maior sequência: ' + S.melhor + '. A rodada do dia começa com ' + LIM + '. Amanhã o contador volta a ' + LIM + '.';
+    var b = bloco();
+    var ac = b.n ? b.ok : S.certasHoje;
+    var tot = b.n || S.feitas;
+    $('lAcertos').textContent = ac + '/' + tot;
+    var seg = b.n && b.ms ? Math.round(b.ms / b.n / 1000) : 0;
+    var fraca = materiaFraca(b);
+    $('lTexto').textContent = 'acertos nesta rodada' + (tot ? ' (' + Math.round(100 * ac / tot) + '%)' : '') + '.';
+    var extra = [];
+    if (seg) extra.push('Tempo médio: ' + seg + ' s por questão.');
+    if (fraca) extra.push('Matéria mais fraca: ' + fraca + '.');
+    extra.push('Maior sequência: ' + S.melhor + '.');
+    $('lResumo').textContent = extra.join(' ');
+    if ($('bRevisar')) $('bRevisar').hidden = !(b.erros && b.erros.length);
     var oferta = $('adOferta');
     if (oferta) oferta.textContent = nativo()
       ? 'Assista a um anúncio com recompensa e libere mais ' + BONUS + ' perguntas. Pode repetir quando esta rodada acabar.'
@@ -918,6 +1110,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     $('bAdOk').disabled = true;
     salvarLocal(); descarregar();
     toast(BONUS + ' perguntas liberadas');
+    S.bloco = blocoNovo();
     metrica('anuncio/fim');
     avaliarAnuncio();
     proxima(true);
@@ -1303,7 +1496,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     });
   }
   ligarPaete();
-  var focoTrofeu = null;
+  var focoTrofeu = null, trofeuAberto = null;
   function detalheTrofeu(item) {
     var modal = $('trofeuModal'); if (!modal) return;
     focoTrofeu = document.activeElement;
@@ -1313,6 +1506,8 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     $('trofeuCrit').textContent = item.crit;
     var barra = $('trofeuBarraBox'), atual = Math.max(0, Math.min(item.atual || 0, item.meta || 0));
     var cor = corEm(item.tom);
+    trofeuAberto = item;
+    if ($('bShareTrofeu')) $('bShareTrofeu').hidden = !ganho;
     if (ganho) {
       barra.hidden = true;
       $('trofeuProg').textContent = 'Conquistado em ' + dataCurta(T.ganhos[item.id]);
@@ -1342,7 +1537,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   $('trofeuFundo').addEventListener('click', fecharTrofeu);
   $('trofeuFechar').addEventListener('click', fecharTrofeu);
   $('trofeuModal').addEventListener('wheel', function (ev) { ev.preventDefault(); }, { passive: false });
-  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') fecharTrofeu(); });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { fecharReportar(); fecharTrofeu(); } });
   function concederTrofeuTeste() {
     if (!T) carregarTrofeus();
     var lista = catalogoTrofeus();
@@ -1379,7 +1574,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       c.addEventListener('change', function () { alternar(d.codigo, c); });
       l.appendChild(n); l.appendChild(det); l.appendChild(c); box.appendChild(l);
     });
-    $('oRapido').checked = !!S.rapido; $('oVibra').checked = !!S.vibra;
+    $('oRapido').checked = !!S.rapido; $('oRevisar').checked = !!S.revisar; $('oVibra').checked = !!S.vibra;
     if ($('devInfo')) $('devInfo').textContent = 'Hoje: ' + S.feitas + ' respondidas de ' + (LIM + S.bonus) + ' liberadas.';
     if ($('bZerarTudo')) desarmar(); aplicarTema();
     $('resumo').textContent = S.total ? ('No total: ' + S.total.toLocaleString('pt-BR') + ' respostas, ' + Math.round(100 * S.certas / S.total) + '% de acerto, maior sequência de ' + S.melhor + '.') : 'Escolha as matérias que entram no sorteio. O nível sobe sozinho quando você acerta bastante.';
@@ -1472,7 +1667,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   var tArma = null;
   function desarmar() { clearTimeout(tArma); var b = $('bZerarTudo'); if (!b) return; b.classList.remove('armado'); b.textContent = 'Começar do zero'; }
   function zerarDia() {
-    S.dia = hoje(); S.feitas = 0; S.bonus = 0; S.adPago = false; S.certasHoje = 0; S.seq = 0;
+    S.dia = hoje(); S.feitas = 0; S.bonus = 0; S.adPago = false; S.certasHoje = 0; S.seq = 0; S.bloco = blocoNovo();
     adFim = 0; clearInterval(tAd); tAd = null;
     salvarLocal(); descarregar(); gravarJa();
   }
@@ -1549,7 +1744,32 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   $('bAdOk').addEventListener('click', cliqueAd);
   $('bSinal').addEventListener('click', sinalizar);
   $('oRapido').addEventListener('change', function () { S.rapido = this.checked; prox = null; salvarLocal(); });
+  $('oRevisar').addEventListener('change', function () { S.revisar = this.checked; prox = null; salvarLocal(); });
   $('oVibra').addEventListener('change', function () { S.vibra = this.checked; salvarLocal(); if (S.vibra) { vibrar(true); soltarHap(); } });
+  $('bReportar').addEventListener('click', function () { if (respondida) $('folhaReportar').hidden = false; });
+  $('bReportarFecha').addEventListener('click', fecharReportar);
+  $('folhaReportar').addEventListener('click', function (ev) {
+    var b = ev.target.closest ? ev.target.closest('[data-motivo]') : null;
+    if (!b) return;
+    reportar(b.getAttribute('data-motivo'));
+  });
+  $('bRevisar').addEventListener('click', revisarRodada);
+  $('bRevVoltar').addEventListener('click', telaLimite);
+  $('bShareLim').addEventListener('click', function () { compartilhar('rodada', textoRodada()); });
+  $('bShareTrofeu').addEventListener('click', function () {
+    var nome = trofeuAberto ? trofeuAberto.nome : 'um troféu';
+    compartilhar('trofeu', 'Conquistei o troféu ' + nome + ' no Quiz Concursos! ' + LINK_QUIZ);
+  });
+  $('bPremiumMenu').addEventListener('click', function () { abrirPremium('tMat'); });
+  $('bPremiumLim').addEventListener('click', function () { abrirPremium('tLim'); });
+  $('bPremVoltar').addEventListener('click', function () { if (premiumVolta === 'tLim') telaLimite(); else { mostrar('tMat'); } });
+  $('bPremInteresse').addEventListener('click', function () {
+    if (premiumAvisado) return;
+    premiumAvisado = true;
+    metrica('premium/interesse');
+    $('premObrigado').hidden = false;
+    $('bPremInteresse').hidden = true;
+  });
   document.addEventListener('keydown', function (ev) {
     if (tela !== 'tJogo' || ev.metaKey || ev.ctrlKey || ev.altKey) return;
     var k = ev.key.toLowerCase();
@@ -1624,6 +1844,14 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   registrarDia(false);
   atualizarMenuTrofeu();
   aplicarTema(); viraDia(); placar();
+  if (window.matchMedia) {
+    var mqTema = window.matchMedia('(prefers-color-scheme: dark)');
+    var aoTema = function () { if ((S.tema || 'auto') === 'auto') aplicarTema(); };
+    if (mqTema.addEventListener) mqTema.addEventListener('change', aoTema);
+  }
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
   carregarManifest();
   var tVarredura = 0;
   setInterval(function () {
