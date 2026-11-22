@@ -56,7 +56,19 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
 /* cápsula do topo */
 .topo { border-radius: 30px; padding: 8px; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 6px; position: relative; overflow: hidden; flex: none; }
-.redondo { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--glass-2); border: 1px solid var(--edge); }
+.redondo { position: relative; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--glass-2); border: 1px solid var(--edge); }
+.ponto-trofeu { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: #e8b423; box-shadow: 0 0 0 2px var(--glass-2); }
+@keyframes pulsoOuro { 0%, 100% { box-shadow: inset 0 0 0 0 rgba(232,180,35,0); background-color: var(--glass-2); } 50% { box-shadow: inset 0 0 0 3px #e8b423; background-color: rgba(232,180,35,.34); } }
+#bMaterias.pulso { animation: pulsoOuro 1.5s ease-in-out 2; }
+.trofeus { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.trofeu { border-radius: 18px; background: var(--glass); border: 1px solid var(--edge); box-shadow: inset 0 1px 0 var(--edge); padding: 8px 4px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 86px; }
+.trofeu svg { width: 46px; height: 46px; }
+.trofeu span { font-size: 10px; font-weight: 700; line-height: 1.15; text-align: center; }
+.trofeu.bloqueado { filter: grayscale(1); opacity: .42; }
+.trofeu.novo svg { filter: drop-shadow(0 0 6px rgba(232,180,35,.9)); }
+.trofeu-det { border-radius: var(--r); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+.trofeu-det b { font-size: 16px; }
+.trofeu-prog { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); }
 .redondo svg { width: 20px; height: 20px; }
 .redondo:active { transform: scale(.94); }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
@@ -151,7 +163,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
 .barra { height: 6px; border-radius: 99px; background: var(--hair); overflow: hidden; margin-top: 14px; }
 .barra i { display: block; height: 100%; width: 0; background: var(--accent); }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(84px + env(safe-area-inset-top, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; max-width: calc(100% - 32px); text-align: center; z-index: 5; pointer-events: none; }
-@media (prefers-reduced-motion: reduce) { .tog::after { transition: none; } .redondo:active, .btn:active { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .tog::after { transition: none; } .redondo:active, .btn:active { transform: none; } #bMaterias.pulso { animation: none; } .trofeu.novo svg { filter: none; } }
 </style>
 
 <div class="fundo" aria-hidden="true"></div>
@@ -159,6 +171,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   <header class="topo vidro fosco">
     <button class="redondo" id="bMaterias" type="button" aria-label="Matérias e ajustes">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
+      <i class="ponto-trofeu" id="pontoTrofeu" hidden></i>
     </button>
     <div class="stats">
       <div class="st"><b id="pHoje">0/20</b><span>hoje</span></div>
@@ -213,6 +226,13 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
         <button type="button" data-tema="light">Claro</button>
         <button type="button" data-tema="dark">Escuro</button>
       </div>
+      <div class="rot">Troféus</div>
+      <div class="trofeus" id="trofeus"></div>
+      <div class="trofeu-det vidro" id="trofeuDet" hidden>
+        <b id="trofeuNome"></b>
+        <span class="aviso" id="trofeuCrit"></span>
+        <span class="trofeu-prog" id="trofeuProg"></span>
+      </div>
       <p class="aviso centro" id="nuvem">Verificando onde o progresso será guardado…</p>
       <div class="dev" id="dev" hidden>
         <b>Só para testes</b>
@@ -220,6 +240,10 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
         <div class="par">
           <button type="button" id="bZerarDia">Zerar hoje</button>
           <button type="button" id="bZerarTudo">Começar do zero</button>
+        </div>
+        <div class="par">
+          <button type="button" id="bTrofeuTeste">Conceder troféu</button>
+          <button type="button" id="bZerarTrofeus">Zerar troféus</button>
         </div>
         <span class="aviso">"Zerar hoje" libera de novo as 20 do dia. "Começar do zero" também apaga histórico, níveis e sequências. Este quadro sai na versão oficial.</span>
       </div>
@@ -310,6 +334,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   function viraDia() {
     if (S.dia === hoje()) return false;
     S.dia = hoje(); S.feitas = 0; S.bonus = 0; S.adPago = false; S.certasHoje = 0;
+    if (T) { T.rodada = 0; T.naRodada = 0; salvarTrofeus(); }
     salvarLocal();
     return true;
   }
@@ -417,6 +442,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     var arr = POOL[disc] || (POOL[disc] = []);
     prep.forEach(function (q) { idsVistos[String(q.id)] = 1; arr.push(q); });
     pacoteOk[nome] = 1;
+    somarNivel3(disc, nome, prep);
     return true;
   }
   function montarFila() {
@@ -671,6 +697,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     }
     elAlts.className = respondida ? 'alts feito' : 'alts';
     if (!respondida) {
+      tMostrada = Date.now();
       esperaVeredito();
       elProx.setAttribute('aria-disabled', 'true'); elProx.textContent = 'Escolha uma alternativa';
     } else {
@@ -732,7 +759,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     elVer.className = 'veredito vidro ' + (ok ? 'c' : 'e');
     vibrar(ok);
     /* 2) depois a contabilidade */
-    var h = hist(d), agora = Math.floor(tResp / 60000), e = h[q.id] || [0, 0, 0, 0];
+    var h = hist(d), agora = Math.floor(tResp / 60000), tinha = h[q.id], e = tinha || [0, 0, 0, 0];
     h[q.id] = [agora, e[1] + (ok ? 1 : 0), e[2] + (ok ? 0 : 1), ok ? 1 : 0];
     S.feitas++; S.total++;
     if (ok) { S.certasHoje++; S.certas++; S.seq++; if (S.seq > S.melhor) S.melhor = S.seq; } else { S.seq = 0; }
@@ -745,6 +772,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     S.fixa = { id: q.id, d: q.d, resp: i };
     salvarLocal(d);
     descarregar();
+    avaliarResposta(q, ok, tinha, tMostrada ? tResp - tMostrada : -1);
     preparar();
   }
   function nivel(d, ok) {
@@ -824,6 +852,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     $('bAdOk').disabled = true;
     salvarLocal(); descarregar();
     toast(BONUS + ' perguntas liberadas');
+    avaliarAnuncio();
     proxima(true);
   }
   function liberar() {
@@ -892,6 +921,247 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     else mostrarRewarded(geracaoAd);
   }
 
+  /* ---------- troféus ---------- */
+  var T = null, tMostrada = 0;
+  var VOLUMES = [50, 100, 200, 300, 400, 500, 750, 1000, 2000, 5000];
+  var SEQUENCIAS = [5, 10, 20, 50];
+  var DIAS_SEG = [3, 7, 30, 100];
+  var GLIFO = {
+    vol: '<path d="M22 40h20M22 33h20M22 26h14" fill="none" stroke="#5c3b08" stroke-width="3" stroke-linecap="round"/>',
+    seq: '<path d="M36 16l-10 16h8l-4 16 16-20h-8z" fill="#5c3b08"/>',
+    dia: '<rect x="22" y="22" width="20" height="18" rx="3" fill="none" stroke="#5c3b08" stroke-width="2.4"/><path d="M22 28h20M28 20v4M36 20v4" stroke="#5c3b08" stroke-width="2.2" stroke-linecap="round"/>',
+    mira: '<circle cx="32" cy="32" r="7" fill="none" stroke="#5c3b08" stroke-width="2.4"/><path d="M32 20v5M32 39v5M20 32h5M39 32h5" stroke="#5c3b08" stroke-width="2.4" stroke-linecap="round"/>',
+    livro: '<path d="M20 22h24v20H20zM32 22v20" fill="none" stroke="#5c3b08" stroke-width="2.4"/>',
+    monte: '<path d="M16 42l12-18 6 9 5-7 9 16z" fill="#5c3b08"/>',
+    sobe: '<path d="M32 44V24M23 32l9-9 9 9" fill="none" stroke="#5c3b08" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>',
+    relogio: '<circle cx="32" cy="32" r="9" fill="none" stroke="#5c3b08" stroke-width="2.4"/><path d="M32 26v7l4 3" fill="none" stroke="#5c3b08" stroke-width="2.4" stroke-linecap="round"/>',
+    sol: '<circle cx="32" cy="32" r="5" fill="#5c3b08"/><path d="M32 18v4M32 42v4M18 32h4M42 32h4M22 22l3 3M39 39l3 3M42 22l-3 3M25 39l-3 3" stroke="#5c3b08" stroke-width="2" stroke-linecap="round"/>',
+    lua: '<path d="M36 20a12 12 0 1 0 0 24 9 9 0 0 1 0-24z" fill="#5c3b08"/>',
+    flag: '<path d="M26 44V20h16l-3 6 3 6H26" fill="none" stroke="#5c3b08" stroke-width="2.4" stroke-linejoin="round"/>',
+    play: '<path d="M27 22v20l16-10z" fill="#5c3b08"/>',
+    grade: '<path d="M20 20h10v10H20zM34 20h10v10H34zM20 34h10v10H20zM34 34h10v10H34z" fill="#5c3b08"/>'
+  };
+  function novoTrofeus() {
+    return { v: 1, ganhos: {}, vistos: {}, novos: {}, mat: {}, viu: {}, n3: {}, niv3: 0, rec: 0, ritmo: 0, rodada: 0, naRodada: 0, melhorRodada: 0, dias: 0, ultimoDia: '', volOk: 0, matOk: 0 };
+  }
+  function carregarTrofeus() {
+    var g = ls.get('cq1-trofeus');
+    T = (g && g.v === 1) ? g : novoTrofeus();
+    if (!T.ganhos) T.ganhos = {};
+    if (!T.vistos) T.vistos = {};
+    if (!T.novos) T.novos = {};
+    if (!T.mat) T.mat = {};
+    if (!T.viu) T.viu = {};
+    if (!T.n3) T.n3 = {};
+  }
+  function salvarTrofeus() { ls.set('cq1-trofeus', T); }
+  function dataCurta(ms) { var d = new Date(ms); return d.toLocaleDateString('pt-BR'); }
+  function ontemChave() { var d = new Date(); d.setDate(d.getDate() - 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function checarTrofeu(id, ok, animar) {
+    if (!ok || T.ganhos[id]) return false;
+    T.ganhos[id] = Date.now();
+    T.novos[id] = 1;
+    if (animar) pulsarMenu();
+    else atualizarMenuTrofeu();
+    return true;
+  }
+  function pulsarMenu() {
+    var b = $('bMaterias');
+    if (!b) return;
+    atualizarMenuTrofeu();
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    b.classList.remove('pulso');
+    void b.offsetWidth;
+    b.classList.add('pulso');
+  }
+  function atualizarMenuTrofeu() {
+    var tem = T && T.novos && Object.keys(T.novos).length;
+    var p = $('pontoTrofeu');
+    if (p) p.hidden = !tem;
+    var b = $('bMaterias');
+    if (!b) return;
+    b.classList.toggle('tem-novo', !!tem);
+    if (!tem) b.classList.remove('pulso');
+  }
+  function registrarDia(animar) {
+    if (!T) carregarTrofeus();
+    var h = hoje();
+    if (T.ultimoDia !== h) {
+      T.dias = T.ultimoDia === ontemChave() ? (T.dias || 0) + 1 : 1;
+      T.ultimoDia = h;
+      DIAS_SEG.forEach(function (n) { checarTrofeu('dia-' + n, T.dias >= n, animar); });
+      salvarTrofeus();
+    }
+  }
+  function prepararTrofeus() {
+    if (!T) carregarTrofeus();
+    if (!T.volOk) {
+      if (S.total > 0) checarTrofeu('pri-1', true, false);
+      if (S.bonus > 0) checarTrofeu('pri-anuncio', true, false);
+      VOLUMES.forEach(function (n) { checarTrofeu('vol-' + n, S.total >= n, false); });
+      SEQUENCIAS.forEach(function (n) { checarTrofeu('seq-' + n, (S.melhor || 0) >= n || (S.seq || 0) >= n, false); });
+      T.volOk = 1;
+    }
+    if (MAN && !T.matOk) {
+      var todas = true;
+      MAN.disciplinas.forEach(function (d) {
+        var h = hist(d.codigo), ac = 0, viu = false;
+        Object.keys(h).forEach(function (id) { ac += (h[id] && h[id][1]) || 0; if (h[id] && (h[id][1] || h[id][2])) viu = true; });
+        T.mat[d.codigo] = Math.max(T.mat[d.codigo] || 0, ac);
+        if (viu) T.viu[d.codigo] = 1;
+        if (!T.viu[d.codigo]) todas = false;
+        checarTrofeu('mat-' + d.codigo, T.mat[d.codigo] >= 100, false);
+      });
+      if (todas && MAN.disciplinas.length) checarTrofeu('polivalente', true, false);
+      T.matOk = 1;
+    }
+    salvarTrofeus();
+    atualizarMenuTrofeu();
+  }
+  function somarNivel3(disc, nome, prep) {
+    if (!T) carregarTrofeus();
+    if (T.n3[nome]) return;
+    var h = hist(disc), add = 0;
+    prep.forEach(function (q) { if ((q.n | 0) === 3 && h[q.id]) add += h[q.id][1] || 0; });
+    T.niv3 = (T.niv3 || 0) + add;
+    T.n3[nome] = 1;
+    checarTrofeu('niv3-25', T.niv3 >= 25, false);
+    salvarTrofeus();
+  }
+  function avaliarResposta(q, ok, tinha, dur) {
+    if (!T) carregarTrofeus();
+    registrarDia(true);
+    checarTrofeu('pri-1', S.total >= 1, true);
+    VOLUMES.forEach(function (n) { checarTrofeu('vol-' + n, S.total >= n, true); });
+    SEQUENCIAS.forEach(function (n) { checarTrofeu('seq-' + n, S.seq >= n, true); });
+    if (ok) {
+      T.mat[q.d] = (T.mat[q.d] || 0) + 1;
+      checarTrofeu('mat-' + q.d, T.mat[q.d] >= 100, true);
+      if ((q.n | 0) === 3) { T.niv3 = (T.niv3 || 0) + 1; checarTrofeu('niv3-25', T.niv3 >= 25, true); }
+    }
+    T.viu[q.d] = 1;
+    if (MAN && MAN.disciplinas.every(function (d) { return T.viu[d.codigo]; })) checarTrofeu('polivalente', true, true);
+    if (ok && tinha && tinha[3] === 0 && ((tinha[1] || 0) + (tinha[2] || 0)) > 0) {
+      T.rec = (T.rec || 0) + 1;
+      checarTrofeu('rec-10', T.rec >= 10, true);
+      checarTrofeu('rec-50', T.rec >= 50, true);
+    }
+    T.ritmo = (ok && dur >= 0 && dur < 15000) ? (T.ritmo || 0) + 1 : 0;
+    checarTrofeu('rit-10', T.ritmo >= 10, true);
+    var hora = new Date().getHours();
+    if (hora < 7) checarTrofeu('madruga', true, true);
+    if (hora >= 23) checarTrofeu('coruja', true, true);
+    T.naRodada = (T.naRodada || 0) + 1;
+    T.rodada = (T.rodada || 0) + (ok ? 1 : 0);
+    if (T.naRodada >= LIM) {
+      var ac = T.rodada;
+      T.naRodada = 0; T.rodada = 0;
+      if (ac > (T.melhorRodada || 0)) T.melhorRodada = ac;
+      checarTrofeu('pri-rodada', true, true);
+      checarTrofeu('pre-90', ac >= 18, true);
+      checarTrofeu('pre-100', ac >= LIM, true);
+    }
+    salvarTrofeus();
+    atualizarMenuTrofeu();
+  }
+  function avaliarAnuncio() {
+    if (!T) carregarTrofeus();
+    if (checarTrofeu('pri-anuncio', true, true)) salvarTrofeus();
+    else salvarTrofeus();
+    atualizarMenuTrofeu();
+  }
+  function svgTrofeu(glifo, ganho, uid) {
+    var a = ganho ? '#fff6d2' : '#e4e7ee', b = ganho ? '#e2ae2e' : '#b7bcc8', c = ganho ? '#a87410' : '#8e94a3';
+    return '<svg viewBox="0 0 64 64" aria-hidden="true"><defs>' +
+      '<linearGradient id="o' + uid + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + a + '"/><stop offset=".45" stop-color="' + b + '"/><stop offset="1" stop-color="' + c + '"/></linearGradient>' +
+      '<linearGradient id="v' + uid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".8"/><stop offset=".55" stop-color="#fff" stop-opacity=".05"/></linearGradient>' +
+      '</defs><circle cx="32" cy="36" r="22" fill="rgba(80,50,0,.18)"/><circle cx="32" cy="32" r="22" fill="url(#o' + uid + ')" stroke="rgba(255,255,255,.7)" stroke-width="1.2"/>' +
+      '<ellipse cx="32" cy="22" rx="14" ry="7" fill="url(#v' + uid + ')"/>' + glifo + '</svg>';
+  }
+  function catalogoTrofeus() {
+    var itens = [];
+    function add(id, nome, curto, crit, glifo, atual, meta) {
+      itens.push({ id: id, nome: nome, curto: curto, crit: crit, glifo: glifo, atual: atual || 0, meta: meta });
+    }
+    add('pri-1', 'Primeira resposta', 'Começo', 'Responda a primeira pergunta.', GLIFO.flag, S.total > 0 ? 1 : 0, 1);
+    add('pri-rodada', 'Rodada fechada', 'Rodada', 'Complete uma rodada de ' + LIM + ' perguntas.', GLIFO.play, T.ganhos['pri-rodada'] ? LIM : (T.naRodada || 0), LIM);
+    add('pri-anuncio', 'Anúncio visto', 'Anúncio', 'Assista a um anúncio até a recompensa.', GLIFO.play, (T.ganhos['pri-anuncio'] || S.bonus > 0) ? 1 : 0, 1);
+    VOLUMES.forEach(function (n) { add('vol-' + n, n.toLocaleString('pt-BR') + ' respostas', String(n), 'Responda ' + n.toLocaleString('pt-BR') + ' perguntas.', GLIFO.vol, S.total, n); });
+    SEQUENCIAS.forEach(function (n) { add('seq-' + n, n + ' seguidas', n + '✓', 'Acerte ' + n + ' perguntas seguidas.', GLIFO.seq, Math.max(S.seq || 0, S.melhor || 0), n); });
+    DIAS_SEG.forEach(function (n) { add('dia-' + n, n + ' dias seguidos', n + 'd', 'Use o quiz por ' + n + ' dias seguidos.', GLIFO.dia, T.dias || 0, n); });
+    add('pre-90', 'Rodada afiada', '90%', 'Feche uma rodada de ' + LIM + ' com pelo menos 90% de acertos.', GLIFO.mira, Math.min(T.melhorRodada || 0, 18), 18);
+    add('pre-100', 'Rodada perfeita', '20/20', 'Acerte as ' + LIM + ' perguntas de uma rodada.', GLIFO.mira, T.melhorRodada || 0, LIM);
+    if (MAN) MAN.disciplinas.forEach(function (d) {
+      add('mat-' + d.codigo, '100 em ' + d.nome, '100', 'Acerte 100 perguntas de ' + d.nome + '.', GLIFO.livro, T.mat[d.codigo] || 0, 100);
+    });
+    var vistas = MAN ? MAN.disciplinas.filter(function (d) { return T.viu[d.codigo]; }).length : 0;
+    var totalMat = MAN ? MAN.disciplinas.length : 0;
+    add('polivalente', 'Polivalente', 'Todas', 'Responda pelo menos uma pergunta de cada matéria.', GLIFO.grade, vistas, totalMat || 1);
+    add('niv3-25', 'Nível três', 'N3', 'Acerte 25 perguntas de nível 3.', GLIFO.monte, T.niv3 || 0, 25);
+    add('rec-10', 'Recuperação', '10', 'Acerte 10 vezes uma pergunta que você tinha errado.', GLIFO.sobe, T.rec || 0, 10);
+    add('rec-50', 'Virada', '50', 'Acerte 50 vezes uma pergunta que você tinha errado.', GLIFO.sobe, T.rec || 0, 50);
+    add('rit-10', 'Relâmpago', '15s', 'Acerte 10 seguidas, cada uma em menos de 15 segundos.', GLIFO.relogio, T.ritmo || 0, 10);
+    add('madruga', 'Madrugador', 'Manhã', 'Responda uma pergunta antes das 7h.', GLIFO.sol, T.ganhos.madruga ? 1 : 0, 1);
+    add('coruja', 'Coruja', 'Noite', 'Responda uma pergunta depois das 23h.', GLIFO.lua, T.ganhos.coruja ? 1 : 0, 1);
+    return itens;
+  }
+  function renderTrofeus() {
+    if (!T) carregarTrofeus();
+    var box = $('trofeus'); if (!box) return;
+    var det = $('trofeuDet');
+    if (T.novos) Object.keys(T.novos).forEach(function (id) { T.vistos[id] = T.vistos[id] || 0; });
+    box.textContent = '';
+    catalogoTrofeus().forEach(function (item, i) {
+      var ganho = !!T.ganhos[item.id];
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'trofeu' + (ganho ? ' ganho' : ' bloqueado') + (ganho && !T.vistos[item.id] ? ' novo' : '');
+      btn.setAttribute('aria-label', item.nome);
+      var ico = document.createElement('span');
+      ico.innerHTML = svgTrofeu(item.glifo, ganho, i);
+      var nome = document.createElement('span');
+      nome.textContent = item.curto;
+      btn.appendChild(ico); btn.appendChild(nome);
+      btn.addEventListener('click', function () { detalheTrofeu(item); });
+      box.appendChild(btn);
+    });
+    Object.keys(T.novos || {}).forEach(function (id) { T.vistos[id] = 1; });
+    T.novos = {};
+    salvarTrofeus();
+    atualizarMenuTrofeu();
+    if (det && det.hidden) { /* permanece fechado até o toque */ }
+  }
+  function detalheTrofeu(item) {
+    var det = $('trofeuDet'); if (!det) return;
+    det.hidden = false;
+    $('trofeuNome').textContent = item.nome;
+    $('trofeuCrit').textContent = item.crit;
+    if (T.ganhos[item.id]) $('trofeuProg').textContent = 'Conquistado em ' + dataCurta(T.ganhos[item.id]);
+    else $('trofeuProg').textContent = Math.min(item.atual, item.meta).toLocaleString('pt-BR') + '/' + item.meta.toLocaleString('pt-BR');
+  }
+  function concederTrofeuTeste() {
+    if (!T) carregarTrofeus();
+    var lista = catalogoTrofeus();
+    for (var i = 0; i < lista.length; i++) {
+      if (!T.ganhos[lista[i].id]) {
+        checarTrofeu(lista[i].id, true, true);
+        salvarTrofeus();
+        if (tela === 'tMat') renderTrofeus();
+        return;
+      }
+    }
+  }
+  function zerarTrofeusTeste() {
+    var n3 = {};
+    if (MAN) MAN.disciplinas.forEach(function (d) { (d.arquivos || []).forEach(function (arq) { n3[arq] = 1; }); });
+    T = novoTrofeus();
+    T.volOk = 1; T.matOk = 1; T.n3 = n3;
+    salvarTrofeus();
+    atualizarMenuTrofeu();
+    if (tela === 'tMat') renderTrofeus();
+    var det = $('trofeuDet'); if (det) det.hidden = true;
+  }
+
   function telaMaterias() {
     var sel = selecionadas(), box = $('lista'); box.textContent = '';
     MAN.disciplinas.forEach(function (d) {
@@ -909,6 +1179,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     if ($('devInfo')) $('devInfo').textContent = 'Hoje: ' + S.feitas + ' respondidas de ' + (LIM + S.bonus) + ' liberadas.';
     if ($('bZerarTudo')) desarmar(); aplicarTema();
     $('resumo').textContent = S.total ? ('No total: ' + S.total.toLocaleString('pt-BR') + ' respostas, ' + Math.round(100 * S.certas / S.total) + '% de acerto, maior sequência de ' + S.melhor + '.') : 'Escolha as matérias que entram no sorteio. O nível sobe sozinho quando você acerta bastante.';
+    renderTrofeus();
     mostrar('tMat');
   }
   function alternar(cod, caixa) {
@@ -1102,6 +1373,8 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     $('dev').hidden = false;
     $('bZerarDia').addEventListener('click', function () { zerarDia(); toast('Contador de hoje zerado'); limparPergunta(); proxima(); });
     $('bZerarTudo').addEventListener('click', zerarTudo);
+    $('bTrofeuTeste').addEventListener('click', concederTrofeuTeste);
+    $('bZerarTrofeus').addEventListener('click', zerarTrofeusTeste);
     window.cqTeste = function (q) { atual = q; respondida = false; elEnun.hidden = false; $('carregando').hidden = true; elAlts.style.visibility = ''; elEnun.textContent = q.q; for (var i = 0; i < 4; i++) elTxt[i].textContent = q.a[i]; encaixarPergunta(); $('vTit').textContent = 'Errado. A resposta é a D.'; $('vTxt').textContent = q.e; encaixarVeredito(); return [apertado, elVT.classList.contains('rola'), elEnun.style.fontSize, elAlts.style.getPropertyValue('--fa'), elVT.style.fontSize]; };
   } else {
     var painelDev = $('dev');
@@ -1122,6 +1395,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       }
       MAN = m;
       m.disciplinas.forEach(function (d) { NOME[d.codigo] = d.nome; });
+      prepararTrofeus();
       montarFila();
       ligarNuvem();
     }).catch(function () {
@@ -1136,6 +1410,9 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   aoFalharGravacao = function () { falhaGravacao = true; avisoGravacao(); };
   if (falhaGravacao) avisoGravacao();
   avisoAd = anuncioMarcado();
+  carregarTrofeus();
+  registrarDia(false);
+  atualizarMenuTrofeu();
   aplicarTema(); viraDia(); placar();
   carregarManifest();
   var tVarredura = 0;
