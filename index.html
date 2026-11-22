@@ -161,7 +161,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
     </button>
     <div class="stats">
-      <div class="st"><b id="pHoje">0/50</b><span>hoje</span></div>
+      <div class="st"><b id="pHoje">0/20</b><span>hoje</span></div>
       <div class="st"><b id="pSeq">0</b><span>seguidas</span></div>
       <div class="st"><b id="pTaxa">–</b><span>acerto</span></div>
     </div>
@@ -221,7 +221,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
           <button type="button" id="bZerarDia">Zerar hoje</button>
           <button type="button" id="bZerarTudo">Começar do zero</button>
         </div>
-        <span class="aviso">"Zerar hoje" libera de novo as 50 do dia. "Começar do zero" também apaga histórico, níveis e sequências. Este quadro sai na versão oficial.</span>
+        <span class="aviso">"Zerar hoje" libera de novo as 20 do dia. "Começar do zero" também apaga histórico, níveis e sequências. Este quadro sai na versão oficial.</span>
       </div>
       <p class="aviso centro">Piloto v4 · banco v1.1</p>
     </div>
@@ -231,14 +231,14 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   <!-- LIMITE -->
   <section class="tela" id="tLim" hidden>
     <div class="rolo">
-      <h1>Você fechou as perguntas de hoje</h1>
+      <h1>Acabou esta rodada</h1>
       <div class="cartao vidro">
         <div class="grande" id="lAcertos">0</div>
         <div class="aviso" id="lTexto"></div>
       </div>
       <div class="cartao vidro" id="cartaoAd">
         <b>Quer continuar?</b>
-        <span class="aviso">Assista a um anúncio de 30 segundos e libere mais 20 perguntas. No piloto, o anúncio é só uma contagem, para testar o ritmo.</span>
+        <span class="aviso" id="adOferta">Assista a um anúncio de 30 segundos e libere mais 20 perguntas. No site, o anúncio é uma contagem. Pode repetir quando esta rodada acabar.</span>
       </div>
     </div>
     <div class="pe"><button class="btn sec" id="bLimMat" type="button">Matérias</button><button class="btn" id="bAnuncio" type="button">Ver anúncio</button></div>
@@ -249,8 +249,8 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     <div class="rolo">
       <div class="vazio">
         <div class="grande" id="adSeg" style="color:var(--ink)">30</div>
-        <h2>Espaço do anúncio</h2>
-        <p>Simulação do piloto. Ao fim da contagem, mais 20 perguntas ficam liberadas.</p>
+        <h2 id="adTitulo">Espaço do anúncio</h2>
+        <p id="adTexto">Simulação do piloto. Ao fim da contagem, mais 20 perguntas ficam liberadas.</p>
         <div class="barra"><i id="adBarra"></i></div>
       </div>
     </div>
@@ -262,7 +262,10 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
 <script>
 (function () {
   'use strict';
-  var LIM = 50, BONUS = 20, AD_S = 30, REVER_MIN = 10, DESCANSO_MIN = 14 * 1440, CURTA = 250, TENTATIVAS = 3;
+  var LIM = 20, BONUS = 20, AD_S = 30, REVER_MIN = 10, DESCANSO_MIN = 14 * 1440, CURTA = 250, TENTATIVAS = 3;
+  /* IDs oficiais de teste do Google. Não trocar por ID de produção neste piloto. */
+  var ADMOB_APP = 'ca-app-pub-3940256099942544~3347511713';
+  var ADMOB_REWARD = 'ca-app-pub-3940256099942544/5224354917';
   var $ = function (id) { return document.getElementById(id); };
   var LETRAS = ['A', 'B', 'C', 'D'];
   function hoje() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -276,12 +279,14 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     return { v: 1, dia: hoje(), feitas: 0, bonus: 0, adPago: false, certasHoje: 0, seq: 0, melhor: 0, total: 0, certas: 0, niv: {}, jan: {}, sel: null, rapido: false, vibra: true, tema: 'auto', flags: [], fixa: null, atualizado: 0, zerado: 0 };
   }
   /* no máximo um bônus de +20 por dia local; o flag fica no mesmo estado já gravado */
+  /* O bônus acumula de 20 em 20, sem teto por enquanto. adPago antigo não trava mais o dia. */
   function normalizarBonus() {
-    var antes = (Number(S.bonus) || 0) + ':' + !!S.adPago;
-    if (Number(S.bonus) > 0) S.adPago = true;
-    S.adPago = !!S.adPago;
-    S.bonus = S.adPago ? BONUS : 0;
-    return antes !== (S.bonus + ':' + S.adPago);
+    var n = Number(S.bonus);
+    var antes = S.bonus + ':' + !!S.adPago;
+    if (!isFinite(n) || n < 0) n = 0;
+    S.bonus = Math.floor(n);
+    S.adPago = false;
+    return antes !== (S.bonus + ':false');
   }
   var MAN = null, NOME = {}, POOL = {}, pedidos = {}, pacoteOk = {}, idsVistos = {}, baixando = 0, fila = [], retriesPend = 0, epoca = 0, tentMan = 0;
   function normalizarFixa() {
@@ -761,36 +766,120 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
 
   function telaLimite() {
     $('lAcertos').textContent = S.certasHoje + '/' + S.feitas;
-    var texto = 'acertos hoje (' + (S.feitas ? Math.round(100 * S.certasHoje / S.feitas) : 0) + '%). Maior sequência: ' + S.melhor + '. Amanhã o contador volta a ' + LIM + '.';
-    if (S.adPago) texto += ' O bônus de hoje já foi usado.';
-    $('lTexto').textContent = texto;
-    $('cartaoAd').hidden = !!S.adPago;
-    $('bAnuncio').hidden = !!S.adPago;
+    $('lTexto').textContent = 'acertos nesta rodada (' + (S.feitas ? Math.round(100 * S.certasHoje / S.feitas) : 0) + '%). Maior sequência: ' + S.melhor + '. A rodada do dia começa com ' + LIM + '. Amanhã o contador volta a ' + LIM + '.';
+    var oferta = $('adOferta');
+    if (oferta) oferta.textContent = nativo()
+      ? 'Assista a um anúncio com recompensa e libere mais ' + BONUS + ' perguntas. Pode repetir quando esta rodada acabar.'
+      : 'Assista a um anúncio de ' + AD_S + ' segundos e libere mais ' + BONUS + ' perguntas. No site, o anúncio é uma contagem. Pode repetir quando esta rodada acabar.';
+    $('cartaoAd').hidden = false;
+    $('bAnuncio').hidden = false;
     mostrar('tLim'); placar();
   }
-  var tAd = null;
+  var tAd = null, premioDesteAnuncio = false, geracaoAd = 0, admobPronto = null;
+  function nativo() {
+    return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  }
+  function pluginAdMob() {
+    var cap = window.Capacitor;
+    return cap && cap.Plugins ? cap.Plugins.AdMob : null;
+  }
   function anuncio() {
     if (checarDia()) return;
-    if (S.adPago) { telaLimite(); return; }
+    premioDesteAnuncio = false;
+    geracaoAd++;
+    if (nativo()) { anuncioNativo(geracaoAd); return; }
+    $('adTitulo').textContent = 'Espaço do anúncio';
+    $('adTexto').textContent = 'Simulação do piloto. Ao fim da contagem, mais ' + BONUS + ' perguntas ficam liberadas.';
     adFim = Date.now() + AD_S * 1000;
     mostrar('tAd'); tickAd();
     clearInterval(tAd); tAd = setInterval(tickAd, 250);
   }
   function tickAd() {
+    if (nativo()) return;
     if (viraDia()) { clearInterval(tAd); tAd = null; adFim = 0; placar(); proxima(); return; }
     var b = $('bAdOk'), resta = Math.max(0, Math.ceil((adFim - Date.now()) / 1000));
     $('adSeg').textContent = resta; $('adBarra').style.width = Math.min(100, 100 * (AD_S - (adFim - Date.now()) / 1000) / AD_S) + '%';
     if (resta <= 0) { clearInterval(tAd); tAd = null; b.disabled = false; b.textContent = 'Liberar mais ' + BONUS + ' perguntas'; }
     else { b.disabled = true; b.textContent = 'Aguarde ' + resta + ' s'; }
   }
-  function liberar() {
-    if (Date.now() < adFim) return;
-    if (viraDia()) { clearInterval(tAd); tAd = null; adFim = 0; placar(); proxima(); return; }
-    if (S.adPago) return;
-    S.adPago = true; S.bonus = BONUS; $('bAdOk').disabled = true;
+  /* TODO: quando houver backend, confirmar a recompensa com a verificação
+     server-side do AdMob (SSV). Por ora o +20 é concedido no cliente,
+     e só depois da recompensa deste anúncio. */
+  function concederBonus(g) {
+    if (g !== geracaoAd || premioDesteAnuncio) return;
+    if (viraDia()) { premioDesteAnuncio = true; placar(); proxima(); return; }
+    premioDesteAnuncio = true;
+    S.adPago = false;
+    S.bonus += BONUS;
+    $('bAdOk').disabled = true;
     salvarLocal(); descarregar();
     toast(BONUS + ' perguntas liberadas');
     proxima(true);
+  }
+  function liberar() {
+    if (nativo()) return;
+    if (Date.now() < adFim) return;
+    if (viraDia()) { clearInterval(tAd); tAd = null; adFim = 0; placar(); proxima(); return; }
+    concederBonus(geracaoAd);
+  }
+  function falhaAnuncio(msg) {
+    $('adTitulo').textContent = 'Anúncio indisponível';
+    $('adTexto').textContent = msg;
+    $('adSeg').textContent = '!';
+    $('adBarra').style.width = '0%';
+    $('bAdOk').disabled = false;
+    $('bAdOk').textContent = 'Tentar de novo';
+  }
+  function garantirAdMob() {
+    var admob = pluginAdMob();
+    /* ADMOB_APP é o ID de teste no AndroidManifest; a unidade rewarded é ADMOB_REWARD. */
+    if (!admob || !ADMOB_APP || !ADMOB_REWARD) return Promise.reject(new Error('sem admob'));
+    if (!admobPronto) {
+      admob.addListener('onRewardedVideoAdReward', function () { concederBonus(geracaoAd); });
+      admobPronto = admob.initialize();
+    }
+    return admobPronto;
+  }
+  function anuncioNativo(g) {
+    clearInterval(tAd); tAd = null; adFim = 0;
+    mostrar('tAd');
+    $('adTitulo').textContent = 'Anúncio com recompensa';
+    $('adTexto').textContent = 'As ' + BONUS + ' perguntas só entram se o anúncio for assistido até a recompensa.';
+    $('adSeg').textContent = '…';
+    $('adBarra').style.width = '0%';
+    $('bAdOk').disabled = true;
+    $('bAdOk').textContent = 'Carregando anúncio…';
+    garantirAdMob().then(function () {
+      if (g !== geracaoAd) return;
+      return pluginAdMob().prepareRewardVideoAd({ adId: ADMOB_REWARD, isTesting: true });
+    }).then(function () {
+      if (g !== geracaoAd) return;
+      $('bAdOk').disabled = false;
+      $('bAdOk').textContent = 'Assistir anúncio';
+      return mostrarRewarded(g);
+    }).catch(function () {
+      if (g !== geracaoAd || premioDesteAnuncio) return;
+      falhaAnuncio('Não consegui carregar o anúncio. Toque em Tentar de novo.');
+    });
+  }
+  function mostrarRewarded(g) {
+    var admob = pluginAdMob();
+    if (!admob || g !== geracaoAd) return Promise.resolve();
+    $('bAdOk').disabled = true;
+    $('bAdOk').textContent = 'Anúncio em reprodução…';
+    return admob.showRewardVideoAd().then(function (item) {
+      /* A promise só resolve quando a recompensa é ganha; o evento acima também libera. */
+      if (item) concederBonus(g);
+    }, function () {
+      if (g !== geracaoAd || premioDesteAnuncio) return;
+      falhaAnuncio('O anúncio fechou antes da recompensa. Toque em Tentar de novo.');
+    });
+  }
+  function cliqueAd() {
+    if ($('bAdOk').disabled) return;
+    if (!nativo()) { liberar(); return; }
+    if ($('bAdOk').textContent === 'Tentar de novo') anuncioNativo(geracaoAd);
+    else mostrarRewarded(geracaoAd);
   }
 
   function telaMaterias() {
@@ -972,7 +1061,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   $('bVoltar').addEventListener('click', voltar);
   $('bLimMat').addEventListener('click', telaMaterias);
   $('bAnuncio').addEventListener('click', anuncio);
-  $('bAdOk').addEventListener('click', liberar);
+  $('bAdOk').addEventListener('click', cliqueAd);
   $('bSinal').addEventListener('click', sinalizar);
   $('oRapido').addEventListener('change', function () { S.rapido = this.checked; prox = null; salvarLocal(); });
   $('oVibra').addEventListener('change', function () { S.vibra = this.checked; salvarLocal(); if (S.vibra) { vibrar(true); soltarHap(); } });
