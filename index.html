@@ -238,6 +238,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       </div>
       <div class="cartao vidro" id="cartaoAd">
         <b>Quer continuar?</b>
+        <span class="aviso" id="avisoInterrompido" hidden>O anúncio foi interrompido. Assista novamente até o fim para liberar mais 20 perguntas.</span>
         <span class="aviso" id="adOferta">Assista a um anúncio de 30 segundos e libere mais 20 perguntas. No site, o anúncio é uma contagem. Pode repetir quando esta rodada acabar.</span>
       </div>
     </div>
@@ -773,9 +774,14 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       : 'Assista a um anúncio de ' + AD_S + ' segundos e libere mais ' + BONUS + ' perguntas. No site, o anúncio é uma contagem. Pode repetir quando esta rodada acabar.';
     $('cartaoAd').hidden = false;
     $('bAnuncio').hidden = false;
+    $('avisoInterrompido').hidden = !avisoAd;
+    $('bAnuncio').textContent = avisoAd ? 'Assistir de novo' : 'Ver anúncio';
     mostrar('tLim'); placar();
   }
-  var tAd = null, premioDesteAnuncio = false, geracaoAd = 0, admobPronto = null;
+  function marcarAnuncio() { ls.set('cq1-anuncio', 1); }
+  function limparMarcaAnuncio() { try { localStorage.removeItem('cq1-anuncio'); } catch (e) {} }
+  function anuncioMarcado() { return !!ls.get('cq1-anuncio'); }
+  var tAd = null, premioDesteAnuncio = false, geracaoAd = 0, admobPronto = null, avisoAd = false;
   function nativo() {
     return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   }
@@ -787,6 +793,8 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     if (checarDia()) return;
     premioDesteAnuncio = false;
     geracaoAd++;
+    /* a marca fica até a recompensa; recarregar no meio recomeça do zero e avisa */
+    marcarAnuncio();
     if (nativo()) { anuncioNativo(geracaoAd); return; }
     $('adTitulo').textContent = 'Espaço do anúncio';
     $('adTexto').textContent = 'Simulação do piloto. Ao fim da contagem, mais ' + BONUS + ' perguntas ficam liberadas.';
@@ -809,6 +817,8 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     if (g !== geracaoAd || premioDesteAnuncio) return;
     if (viraDia()) { premioDesteAnuncio = true; placar(); proxima(); return; }
     premioDesteAnuncio = true;
+    avisoAd = false;
+    limparMarcaAnuncio();
     S.adPago = false;
     S.bonus += BONUS;
     $('bAdOk').disabled = true;
@@ -822,13 +832,13 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     if (viraDia()) { clearInterval(tAd); tAd = null; adFim = 0; placar(); proxima(); return; }
     concederBonus(geracaoAd);
   }
-  function falhaAnuncio(msg) {
+  function falhaAnuncio(msg, rotulo) {
     $('adTitulo').textContent = 'Anúncio indisponível';
     $('adTexto').textContent = msg;
     $('adSeg').textContent = '!';
     $('adBarra').style.width = '0%';
     $('bAdOk').disabled = false;
-    $('bAdOk').textContent = 'Tentar de novo';
+    $('bAdOk').textContent = rotulo || 'Tentar de novo';
   }
   function garantirAdMob() {
     var admob = pluginAdMob();
@@ -872,13 +882,13 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       if (item) concederBonus(g);
     }, function () {
       if (g !== geracaoAd || premioDesteAnuncio) return;
-      falhaAnuncio('O anúncio fechou antes da recompensa. Toque em Tentar de novo.');
+      falhaAnuncio('O anúncio foi interrompido. Assista novamente até o fim para liberar mais ' + BONUS + ' perguntas.', 'Assistir de novo');
     });
   }
   function cliqueAd() {
     if ($('bAdOk').disabled) return;
     if (!nativo()) { liberar(); return; }
-    if ($('bAdOk').textContent === 'Tentar de novo') anuncioNativo(geracaoAd);
+    if ($('bAdOk').textContent === 'Tentar de novo' || $('bAdOk').textContent === 'Assistir de novo') anuncio();
     else mostrarRewarded(geracaoAd);
   }
 
@@ -1125,6 +1135,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   /* ---------- início ---------- */
   aoFalharGravacao = function () { falhaGravacao = true; avisoGravacao(); };
   if (falhaGravacao) avisoGravacao();
+  avisoAd = anuncioMarcado();
   aplicarTema(); viraDia(); placar();
   carregarManifest();
   var tVarredura = 0;
