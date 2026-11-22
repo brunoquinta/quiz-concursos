@@ -60,8 +60,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .ponto-trofeu { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: #e8b423; box-shadow: 0 0 0 2px var(--glass-2); }
 @keyframes pulsoOuro { 0%, 100% { box-shadow: inset 0 0 0 0 rgba(232,180,35,0); background-color: var(--glass-2); } 50% { box-shadow: inset 0 0 0 3px #e8b423; background-color: rgba(232,180,35,.34); } }
 #bMaterias.pulso { animation: pulsoOuro 1.5s ease-in-out 2; }
-.trofeus { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.trofeu { border-radius: 18px; background: var(--glass); border: 1px solid var(--edge); box-shadow: inset 0 1px 0 var(--edge); padding: 8px 4px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 92px; }
+.trofeus { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; perspective: 820px; }
+.trofeu { position: relative; border-radius: 18px; background: var(--glass); border: 1px solid var(--edge); box-shadow: inset 0 1px 0 var(--edge); padding: 8px 4px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 92px; transform-style: preserve-3d; transition: transform .4s cubic-bezier(.22,.8,.28,1); }
+.trofeus.paete-vivo .trofeu { transition: none; }
+.trofeu .paete { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .4s ease; background: radial-gradient(circle at var(--bx, 50%) var(--by, 30%), rgba(255,255,255,.95), rgba(255,255,255,.28) 16%, transparent 42%); }
+.trofeus.paete-vivo .paete { transition: none; }
 .trofeu svg { width: 52px; height: 52px; }
 .trofeu span { font-size: 11px; font-weight: 700; line-height: 1.15; text-align: center; }
 .trofeu.bloqueado { opacity: .62; }
@@ -172,7 +175,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
 .barra { height: 6px; border-radius: 99px; background: var(--hair); overflow: hidden; margin-top: 14px; }
 .barra i { display: block; height: 100%; width: 0; background: var(--accent); }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(84px + env(safe-area-inset-top, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; max-width: calc(100% - 32px); text-align: center; z-index: 5; pointer-events: none; }
-@media (prefers-reduced-motion: reduce) { .tog::after { transition: none; } .redondo:active, .btn:active { transform: none; } #bMaterias.pulso { animation: none; } .trofeu.novo svg { filter: none; } .trofeu-cartao.entra { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .tog::after { transition: none; } .redondo:active, .btn:active { transform: none; } #bMaterias.pulso { animation: none; } .trofeu.novo svg { filter: none; } .trofeu-cartao.entra { animation: none; } .trofeu, .trofeu .paete { transition: none; } }
 </style>
 
 <div class="fundo" aria-hidden="true"></div>
@@ -959,21 +962,21 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     function mix(p, q) { var A = hexRgb(p), B = hexRgb(q); return rgbHex([A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f, A[2] + (B[2] - A[2]) * f]); }
     return { l: mix(a.l, b.l), m: mix(a.m, b.m), d: mix(a.d, b.d), i: mix(a.i, b.i) };
   }
-  function simboloTrofeu(tipo, ink, extra) {
-    var s = 'stroke="' + ink + '"', f = 'fill="' + ink + '"';
-    if (tipo === 'broto') return '<path d="M32 44V32" fill="none" ' + s + ' stroke-width="2.4" stroke-linecap="round"/><path d="M32 36C27 36 21 31 20 24c6 .4 10 4 12 12z" ' + f + '/><path d="M32 31c5-.4 11-5 12-12-6 .6-10 5-12 12z" ' + f + '/><path d="M26 44h12" fill="none" ' + s + ' stroke-width="2.2" stroke-linecap="round"/>';
-    if (tipo === 'chama') return '<path d="M32 13c2 5 7 7 7 13.5C39 33 36 39 32 39s-7-6-7-12.5c0-3 1.2-5 2.6-6.8.8 2 2 2.6 2.8 0 .4-2.8.8-5 1.6-6.7z" fill="#fff" ' + s + ' stroke-width="1.25" stroke-linejoin="round"/><path d="M32 27c.9 2 2.2 2.8 2.2 5a2.2 2.2 0 0 1-4.4 0c0-2.2 1-3.2 2.2-5z" ' + f + '/>';
-    if (tipo === 'cal') return '<rect x="20" y="20" width="24" height="18" rx="3.5" fill="none" ' + s + ' stroke-width="2.2"/><path d="M20 26.5h24M26.5 17.5v5M37.5 17.5v5" fill="none" ' + s + ' stroke-width="2.2" stroke-linecap="round"/><circle cx="27" cy="32.5" r="1.55" ' + f + '/><circle cx="32" cy="32.5" r="1.55" ' + f + '/><circle cx="37" cy="32.5" r="1.55" ' + f + '/>';
-    if (tipo === 'alvo') return '<circle cx="32" cy="29" r="10.2" fill="none" ' + s + ' stroke-width="2.5"/><circle cx="32" cy="29" r="5.5" fill="none" ' + s + ' stroke-width="2.5"/><circle cx="32" cy="29" r="2.15" ' + f + '/>';
-    if (tipo === 'livro') return '<path d="M32 22.5c-3.2 0-7.2-1.4-12-1.4v15.6c4.8 0 8.8 1.4 12 1.4s7.2-1.4 12-1.4V21.1c-4.8 0-8.8 1.4-12 1.4z" ' + f + '/><path d="M32 22.5v15.6M25 26.2h5M25 30h5M39 26.2h-5M39 30h-5" fill="none" stroke="#fff" stroke-opacity=".62" stroke-width="1.15" stroke-linecap="round"/>';
-    if (tipo === 'estrela') return '<path d="M32 15.5l3.4 7.6 8.2.8-6.2 5.4 1.9 8.1L32 33.4l-7.3 4 1.9-8.1-6.2-5.4 8.2-.8z" ' + f + '/>';
-    if (tipo === 'monte') return '<path d="M13 43l13-20 6.2 9.2L39 18l13 25z" ' + f + '/><path d="M39 18l5.2 8.2h-9.2z" fill="#fff" opacity=".8"/>';
-    if (tipo === 'giro') return '<path d="M41.5 24.2A10 10 0 1 0 43 34.5" fill="none" ' + s + ' stroke-width="2.6" stroke-linecap="round"/><path d="M41.2 17.8l1.4 7.4-7.3.2" fill="none" ' + s + ' stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
-    if (tipo === 'raio') return '<path d="M36 15L23.5 32h8.2L28 46l15.5-18.5H34.2z" ' + f + '/>';
-    if (tipo === 'sol') return '<path d="M19 37h26" fill="none" ' + s + ' stroke-width="2.2" stroke-linecap="round"/><path d="M23.5 37a8.5 8.5 0 0 1 17 0z" ' + f + '/><path d="M32 18.5v5.2M22.5 24.2l3.6 3.4M41.5 24.2l-3.6 3.4" fill="none" ' + s + ' stroke-width="2.1" stroke-linecap="round"/>';
-    if (tipo === 'lua') return '<path d="M38 19.5a12 12 0 1 0 .2 22.2 9.2 9.2 0 0 1-.2-22.2z" ' + f + '/><path d="M22.5 22.2l.8 1.8 1.9.2-1.4 1.2.4 1.8-1.7-1-1.7 1 .4-1.8-1.4-1.2 1.9-.2z" fill="#fff" opacity=".85"/>';
-    var n = String(extra == null ? '' : extra), fs = n.length >= 4 ? 11 : (n.length === 3 ? 13.5 : 16);
-    return '<circle cx="32" cy="29" r="13.2" fill="none" ' + s + ' stroke-width="1.35" opacity=".4"/><text x="32" y="34" text-anchor="middle" font-family="ui-sans-serif,system-ui,sans-serif" font-size="' + fs + '" font-weight="800" ' + f + '">' + n + '</text>';
+  var CREME = 'rgba(255,252,245,.94)';
+  function simboloTrofeu(tipo, extra) {
+    if (tipo === 'broto') return '<path d="M32 39.4V30.4"/><path d="M32 33.2C28.8 33.2 25.2 30.4 24.6 26.6 28.2 27.2 30.6 29.6 32 33.2"/><path d="M32 31.2C35.2 31 38.6 28 39.4 24.2 36.2 24.8 33.6 27.6 32 31.2"/><path d="M28.2 39.4h7.6"/>';
+    if (tipo === 'chama') return '<path d="M32 19.2c1.2 3.4 4.6 4.6 4.6 8.6 0 3.5-2.1 6-4.6 6s-4.6-2.5-4.6-6c0-2.2.8-3.6 1.8-4.8.6 1.4 1.4 1.8 2 .2.4-2 .6-4.2.8-6"/><path d="M32 26.8c.7 1.5 1.6 2.1 1.6 3.4"/>';
+    if (tipo === 'cal') return '<rect x="25.4" y="22.6" width="13.2" height="11.6" rx="1.8"/><path d="M25.4 26.6h13.2M28.6 21.2v2.8M35.4 21.2v2.8"/><circle cx="28.8" cy="30.2" r=".85" fill="' + CREME + '" stroke="none"/><circle cx="32" cy="30.2" r=".85" fill="' + CREME + '" stroke="none"/><circle cx="35.2" cy="30.2" r=".85" fill="' + CREME + '" stroke="none"/>';
+    if (tipo === 'alvo') return '<circle cx="32" cy="30" r="7.4"/><circle cx="32" cy="30" r="4.1"/><circle cx="32" cy="30" r="1.15" fill="' + CREME + '" stroke="none"/>';
+    if (tipo === 'livro') return '<path d="M32 23.6c-2.2 0-5-1-8.2-1v11.6c3.2 0 6 1 8.2 1s5-1 8.2-1V22.6c-3.2 0-6 1-8.2 1z"/><path d="M32 23.6v11.6"/>';
+    if (tipo === 'estrela') return '<path d="M32 19.8l2.7 6.48 7 0.57-5.33 4.57 1.63 6.83L32 34.6l-6 3.65 1.63-6.83-5.33-4.57 7-0.57z"/>';
+    if (tipo === 'monte') return '<path d="M24.2 37.8l5.2-9.8 2.8 4.4 4.2-7.6 3.8 13z"/>';
+    if (tipo === 'giro') return '<path d="M37.4 25.6a6.8 6.8 0 1 0 1.5 7.2"/><path d="M37.2 21.8l.6 4.8-4.6.4"/>';
+    if (tipo === 'raio') return '<path d="M34.2 19.8l-6.4 10.2h3.6l-2.4 9.6 8.4-12.2h-3.8z"/>';
+    if (tipo === 'sol') return '<path d="M25 36h14"/><path d="M27.4 36a4.6 4.6 0 0 1 9.2 0z"/><path d="M32 22.8v3.4M25.8 26.6l2.2 2M38.2 26.6l-2.2 2"/>';
+    if (tipo === 'lua') return '<path d="M35.6 22.8a7.2 7.2 0 1 0 .1 14.2 5.4 5.4 0 0 1-.1-14.2z"/><path d="M26.2 23.2l.55 1.15 1.25.15-.9.8.28 1.2-1.18-.68-1.18.68.28-1.2-.9-.8 1.25-.15z"/>';
+    var n = String(extra == null ? '' : extra), fs = n.length >= 4 ? 8 : (n.length === 3 ? 10 : 12.5);
+    return '<text x="32" y="30.5" text-anchor="middle" dominant-baseline="central" font-family="ui-sans-serif,system-ui,sans-serif" font-size="' + fs + '" font-weight="700" fill="' + CREME + '" stroke="none">' + n + '</text>';
   }
   function novoTrofeus() {
     return { v: 1, ganhos: {}, vistos: {}, novos: {}, mat: {}, viu: {}, n3: {}, niv3: 0, rec: 0, ritmo: 0, rodada: 0, naRodada: 0, melhorRodada: 0, dias: 0, ultimoDia: '', volOk: 0, matOk: 0 };
@@ -1106,19 +1109,20 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   }
   function svgTrofeu(item, ganho, uid) {
     var c = ganho ? corEm(item.tom) : CINZA;
-    var g = 'g' + uid, r = 'r' + uid, s = 's' + uid, k = 'k' + uid;
+    var g = 'g' + uid, r = 'r' + uid, s = 's' + uid, k = 'k' + uid, cl = 'q' + uid;
     return '<svg viewBox="0 0 64 64" aria-hidden="true"><defs>' +
       '<radialGradient id="' + g + '" cx="32%" cy="26%" r="78%"><stop offset="0" stop-color="' + c.l + '"/><stop offset=".46" stop-color="' + c.m + '"/><stop offset="1" stop-color="' + c.d + '"/></radialGradient>' +
       '<linearGradient id="' + r + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".42" stop-color="#fff" stop-opacity=".12"/><stop offset="1" stop-color="#fff" stop-opacity=".7"/></linearGradient>' +
       '<linearGradient id="' + s + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".92"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></linearGradient>' +
-      '<clipPath id="' + k + '"><circle cx="32" cy="30" r="20.2"/></clipPath></defs>' +
-      '<ellipse cx="32" cy="56" rx="14" ry="3.1" fill="' + c.d + '" opacity=".3"/>' +
+      '<clipPath id="' + k + '"><circle cx="32" cy="30" r="20.2"/></clipPath>' +
+      '<clipPath id="' + cl + '"><circle cx="32" cy="30" r="12.2"/></clipPath></defs>' +
       '<circle cx="32" cy="30" r="22" fill="url(#' + g + ')"/>' +
       '<g clip-path="url(#' + k + ')"><ellipse cx="32" cy="47" rx="18" ry="11" fill="' + c.d + '" opacity=".38"/></g>' +
       '<circle cx="32" cy="30" r="20.5" fill="none" stroke="url(#' + r + ')" stroke-width="2.4"/>' +
       '<ellipse cx="26" cy="17.5" rx="10" ry="5" fill="url(#' + s + ')" transform="rotate(-16 26 17.5)"/>' +
       '<circle cx="22.5" cy="16.5" r="1.6" fill="#fff"/>' +
-      simboloTrofeu(item.tipo, c.i, item.extra) + '</svg>';
+      '<g class="sim" clip-path="url(#' + cl + ')" fill="none" stroke="' + CREME + '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
+      simboloTrofeu(item.tipo, item.extra) + '</g></svg>';
   }
   function catalogoTrofeus() {
     var itens = [];
@@ -1150,23 +1154,28 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     add('coruja', 'Coruja', 'Noite', 'Responda uma pergunta depois das 23h.', 'lua', 0.16, T.ganhos.coruja ? 1 : 0, 1);
     return itens;
   }
+  var listaTrofeus = [];
   function renderTrofeus() {
     if (!T) carregarTrofeus();
     var box = $('trofeus'); if (!box) return;
     if (T.novos) Object.keys(T.novos).forEach(function (id) { T.vistos[id] = T.vistos[id] || 0; });
     box.textContent = '';
-    catalogoTrofeus().forEach(function (item, i) {
+    listaTrofeus = catalogoTrofeus();
+    listaTrofeus.forEach(function (item, i) {
       var ganho = !!T.ganhos[item.id];
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'trofeu' + (ganho ? ' ganho' : ' bloqueado') + (ganho && !T.vistos[item.id] ? ' novo' : '');
       btn.setAttribute('aria-label', item.nome);
+      btn.setAttribute('data-i', String(i));
+      var brilho = document.createElement('i');
+      brilho.className = 'paete';
+      brilho.setAttribute('aria-hidden', 'true');
       var ico = document.createElement('span');
       ico.innerHTML = svgTrofeu(item, ganho, 'g' + i);
       var nome = document.createElement('span');
       nome.textContent = item.curto;
-      btn.appendChild(ico); btn.appendChild(nome);
-      btn.addEventListener('click', function () { detalheTrofeu(item); });
+      btn.appendChild(brilho); btn.appendChild(ico); btn.appendChild(nome);
       box.appendChild(btn);
     });
     Object.keys(T.novos || {}).forEach(function (id) { T.vistos[id] = 1; });
@@ -1174,6 +1183,69 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     salvarTrofeus();
     atualizarMenuTrofeu();
   }
+  function reduzMovimento() { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  function ligarPaete() {
+    var box = $('trofeus'); if (!box || box._paete) return;
+    box._paete = 1;
+    var ativo = null, pintando = false, px = 0, py = 0;
+    function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+    function pintar() {
+      pintando = false;
+      if (!ativo) return;
+      var cards = box.children, i, el, r, dx, dy, dist, f, brilho;
+      for (i = 0; i < cards.length; i++) {
+        el = cards[i];
+        r = el.getBoundingClientRect();
+        dx = px - (r.left + r.width / 2);
+        dy = py - (r.top + r.height / 2);
+        dist = Math.sqrt(dx * dx + dy * dy);
+        f = Math.max(0, 1 - dist / 150);
+        el.style.transform = 'rotateX(' + (clamp(dy / 16, -1, 1) * 12 * f).toFixed(2) + 'deg) rotateY(' + (clamp(-dx / 16, -1, 1) * 12 * f).toFixed(2) + 'deg)';
+        brilho = el.querySelector('.paete');
+        if (!brilho) continue;
+        el.style.setProperty('--bx', ((px - r.left) / r.width * 100).toFixed(1) + '%');
+        el.style.setProperty('--by', ((py - r.top) / r.height * 100).toFixed(1) + '%');
+        brilho.style.opacity = f.toFixed(3);
+      }
+    }
+    function pedir() { if (pintando || !ativo) return; pintando = true; requestAnimationFrame(pintar); }
+    box.addEventListener('pointerdown', function (ev) {
+      if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+      if (!ev.target.closest || !ev.target.closest('.trofeu')) return;
+      ativo = { x: ev.clientX, y: ev.clientY, t: Date.now(), arrastou: false };
+      px = ev.clientX; py = ev.clientY;
+      if (!reduzMovimento()) { box.classList.add('paete-vivo'); pedir(); }
+    });
+    window.addEventListener('pointermove', function (ev) {
+      if (!ativo) return;
+      var dx = ev.clientX - ativo.x, dy = ev.clientY - ativo.y;
+      if (dx * dx + dy * dy > 100) ativo.arrastou = true;
+      px = ev.clientX; py = ev.clientY;
+      if (!reduzMovimento()) pedir();
+    });
+    function soltar() {
+      if (!ativo) return;
+      box._bloqueia = ativo.arrastou || (Date.now() - ativo.t > 500);
+      ativo = null;
+      box.classList.remove('paete-vivo');
+      var cards = box.children, i, brilho;
+      for (i = 0; i < cards.length; i++) {
+        cards[i].style.transform = '';
+        brilho = cards[i].querySelector('.paete');
+        if (brilho) brilho.style.opacity = '';
+      }
+    }
+    window.addEventListener('pointerup', soltar);
+    window.addEventListener('pointercancel', soltar);
+    box.addEventListener('click', function (ev) {
+      var b = ev.target.closest ? ev.target.closest('.trofeu') : null;
+      if (!b || !box.contains(b)) return;
+      if (ev.detail !== 0 && box._bloqueia) { box._bloqueia = false; return; }
+      var item = listaTrofeus[+b.getAttribute('data-i')];
+      if (item) detalheTrofeu(item);
+    });
+  }
+  ligarPaete();
   var focoTrofeu = null;
   function detalheTrofeu(item) {
     var modal = $('trofeuModal'); if (!modal) return;
