@@ -11,6 +11,7 @@
   --ok: #0f9d4d; --ok-fill: rgba(15,157,77,.16); --bad: #dc3327; --bad-fill: rgba(220,51,39,.14);
   --b1: #a9cbff; --b2: #cdbdff; --b3: #a6eadf;
   --r: 22px;
+  --folha: #f6f8fd;
   --f: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
@@ -21,6 +22,7 @@
     --accent: #3f8cff; --on-accent: #ffffff; --accent-fill: rgba(63,140,255,.18);
     --ok: #35d07c; --ok-fill: rgba(53,208,124,.18); --bad: #ff6055; --bad-fill: rgba(255,96,85,.18);
     --b1: #12357f; --b2: #37226f; --b3: #0c4a52;
+    --folha: #141a2c;
     color-scheme: dark;
   }
 }
@@ -31,6 +33,7 @@
   --accent: #3f8cff; --on-accent: #ffffff; --accent-fill: rgba(63,140,255,.18);
   --ok: #35d07c; --ok-fill: rgba(53,208,124,.18); --bad: #ff6055; --bad-fill: rgba(255,96,85,.18);
   --b1: #12357f; --b2: #37226f; --b3: #0c4a52;
+  --folha: #141a2c;
   color-scheme: dark;
 }
 :root[data-theme="light"] { color-scheme: light; }
@@ -107,16 +110,30 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .pts { display: inline-flex; gap: 4px; }
 .pts i { width: 7px; height: 7px; border-radius: 50%; background: var(--hair); }
 .pts i.on { background: var(--accent); }
-.enun { width: 100%; max-height: 100%; overflow: hidden; font-size: 18px; line-height: 1.32; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); white-space: pre-wrap; overflow-wrap: break-word; text-wrap: pretty; text-align: justify; -webkit-hyphens: auto; hyphens: auto; }
+.enun { width: 100%; max-height: 100%; overflow: hidden; font-size: 18px; line-height: 1.32; font-weight: 600; letter-spacing: 0; word-spacing: 0; color: var(--ink); white-space: pre-wrap; overflow-wrap: break-word; text-wrap: pretty; text-align: justify; -webkit-text-align-last: left; text-align-last: left; -webkit-hyphens: auto; hyphens: auto; -webkit-hyphenate-limit-chars: 6 3 3; hyphenate-limit-chars: 6 3 3; }
+.enun.curto { text-align: left; -webkit-text-align-last: auto; text-align-last: auto; -webkit-hyphens: manual; hyphens: manual; }
 .dias { margin: -8px 8px 0; text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .02em; color: var(--accent); }
 #pHoje { font-size: 15px; }
 .reportar { flex: 1 0 100%; text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); text-decoration: underline; min-height: 28px; }
 #tJogo .pe { flex-wrap: wrap; }
-.folha { position: fixed; inset: 0; z-index: 25; display: grid; align-items: end; }
+.folha { position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center; padding: 12px 12px max(12px, env(safe-area-inset-bottom)); }
 .folha[hidden] { display: none; }
-.folha-fundo { position: absolute; inset: 0; background: rgba(12,18,36,.28); }
-.folha-caixa { position: relative; margin: 0 auto 18px; width: min(420px, calc(100% - 24px)); border-radius: 22px; padding: 14px; display: flex; flex-direction: column; gap: 8px; background: var(--glass-2); }
-.folha-caixa button { min-height: 44px; border-radius: 14px; background: var(--glass); font-weight: 650; }
+.folha-fundo { position: absolute; inset: 0; border: 0; background: rgba(8,12,24,.62); }
+.folha-caixa { position: relative; z-index: 1; width: min(420px, 100%); border-radius: 22px; padding: 16px 16px 8px; display: flex; flex-direction: column; gap: 8px; background: var(--folha); color: var(--ink); box-shadow: 0 18px 48px rgba(0,0,0,.38); }
+.folha-caixa b { font-size: 17px; text-align: center; }
+.folha-caixa button[data-motivo] { min-height: 48px; border-radius: 14px; background: var(--bg); color: var(--ink); border: 1px solid var(--hair); font-weight: 700; }
+.folha-cancelar { min-height: 44px; color: var(--muted); font-weight: 700; }
+.prem-rolo { justify-content: center; }
+.prem-miolo { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+.prem-miolo .btn { flex: none; }
+.prem-benef { text-align: left; align-items: stretch; }
+.prem-benef > b { text-align: center; }
+.benef { display: flex; gap: 10px; align-items: center; margin: 0; color: var(--ink); font-size: 16px; }
+.benef svg { flex: none; color: var(--ok); }
+.prem-ok { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.prem-ok[hidden] { display: none; }
+.prem-ok svg { color: var(--ok); }
+#revLista .cartao { text-align: left; }
 :root[data-theme="dark"] .trofeu.bloqueado, :root:not([data-theme="light"]) .trofeu.bloqueado { opacity: .72; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .trofeu.bloqueado { opacity: .72; } }
 .enun.rola, .alt .txt.rola, .vtexto.rola { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: none;
@@ -217,7 +234,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       </div>
       <div class="caixaQ" id="caixaQ">
         <div class="vazio" id="carregando"><h2>Carregando perguntas</h2><p>O primeiro pacote chega em instantes.</p></div>
-        <div class="enun" id="enun" hidden></div>
+        <div class="enun" id="enun" lang="pt-BR" hidden></div>
       </div>
       <div class="alts" id="alts" style="visibility:hidden">
         <button class="alt" type="button" data-i="0"><span class="bolha">A</span><span class="txt"></span></button>
@@ -307,18 +324,25 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   </section>
 
   <section class="tela" id="tPrem" hidden>
-    <div class="rolo">
-      <h1>Seja Premium</h1>
-      <p class="aviso centro">Um teste de interesse. Ainda não há cobrança.</p>
-      <div class="cartao vidro">
-        <b>O que está planejado</b>
-        <span class="aviso">Sem anúncios.</span>
-        <span class="aviso">Perguntas ilimitadas.</span>
-        <span class="aviso">Estatísticas do seu treino.</span>
+    <div class="rolo prem-rolo">
+      <div class="prem-miolo">
+        <h1>Seja Premium</h1>
+        <p class="aviso centro" id="premIntro">Um teste de interesse. Ainda não há cobrança.</p>
+        <div class="cartao vidro prem-benef">
+          <b>O que está planejado</b>
+          <p class="benef"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-8"/></svg>Sem anúncios.</p>
+          <p class="benef"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-8"/></svg>Perguntas ilimitadas.</p>
+          <p class="benef"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-8"/></svg>Estatísticas do seu treino.</p>
+        </div>
+        <div class="prem-ok" id="premObrigado" hidden>
+          <svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="24" cy="24" r="18"/><path d="M15 24.5l6 6 12-13"/></svg>
+          <b>Obrigado!</b>
+          <span class="aviso">Avisaremos quando estiver disponível.</span>
+        </div>
+        <button class="btn" id="bPremInteresse" type="button">Quero ser avisado</button>
+        <button class="btn sec" id="bPremVoltar" type="button">Agora não</button>
       </div>
-      <p class="aviso centro" id="premObrigado" hidden>Obrigado! Avisaremos quando estiver disponível.</p>
     </div>
-    <div class="pe"><button class="btn sec" id="bPremVoltar" type="button">Agora não</button><button class="btn" id="bPremInteresse" type="button">Quero ser avisado</button></div>
   </section>
 
   <!-- ANÚNCIO SIMULADO -->
@@ -337,12 +361,13 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
 <div class="toast" id="toast" hidden role="status"></div>
 <div class="folha" id="folhaReportar" hidden>
   <button type="button" class="folha-fundo" id="bReportarFecha" aria-label="Fechar"></button>
-  <div class="folha-caixa vidro" role="dialog" aria-label="Reportar questão">
-    <b>O que há de errado?</b>
+  <div class="folha-caixa" role="dialog" aria-modal="true" aria-labelledby="reportarTit">
+    <b id="reportarTit">O que há de errado?</b>
     <button type="button" data-motivo="gabarito">Gabarito errado</button>
     <button type="button" data-motivo="confuso">Enunciado confuso</button>
     <button type="button" data-motivo="desatualizada">Desatualizada</button>
     <button type="button" data-motivo="outro">Outro</button>
+    <button type="button" class="folha-cancelar" id="bReportarCancela">Cancelar</button>
   </div>
 </div>
 <div class="trofeu-modal" id="trofeuModal" hidden>
@@ -757,10 +782,21 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     caixas.forEach(function (c) { c.classList.toggle('rola', sobra && transborda(c)); c.classList.remove('fim'); });
     return sobra;
   }
+  function alinharEnunciado() {
+    elEnun.lang = 'pt-BR';
+    var texto = (elEnun.textContent || '').replace(/\s+/g, ' ').trim();
+    var curto = texto.length > 0 && texto.length < 90;
+    if (!curto && elEnun.clientHeight) {
+      var lh = parseFloat(getComputedStyle(elEnun).lineHeight);
+      if (lh && elEnun.scrollHeight <= lh * 2.15) curto = true;
+    }
+    elEnun.classList.toggle('curto', curto);
+  }
   function encaixarPergunta() {
     var a = encaixar(elEnun, [elEnun], 13, 19, 'font-size');
     var b = encaixar(elAlts, elTxt, 12, 17, '--fa');
     apertado = a || b;
+    alinharEnunciado();
   }
   function encaixarVeredito() { encaixar(elVT, [elVT], 12, 15, 'font-size'); }
   function esperaVeredito() {
@@ -1020,16 +1056,32 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     });
     mostrar('tRev');
   }
-  var premiumAvisado = false;
+  function jaQuerPremium() { try { return localStorage.getItem('cq1-premium') === '1'; } catch (e) { return false; } }
+  function pintarPremium() {
+    var ja = jaQuerPremium();
+    if ($('premObrigado')) $('premObrigado').hidden = !ja;
+    if ($('premIntro')) $('premIntro').hidden = ja;
+    if ($('bPremInteresse')) $('bPremInteresse').hidden = ja;
+    if ($('bPremVoltar')) $('bPremVoltar').textContent = ja ? 'Voltar ao treino' : 'Agora não';
+  }
   function abrirPremium(voltar) {
     premiumVolta = voltar || 'tMat';
     metrica('premium/visto');
-    if ($('premObrigado')) $('premObrigado').hidden = !premiumAvisado;
-    if ($('bPremInteresse')) $('bPremInteresse').hidden = premiumAvisado;
+    pintarPremium();
     mostrar('tPrem');
   }
   var premiumVolta = 'tMat';
-  function fecharReportar() { var f = $('folhaReportar'); if (f) f.hidden = true; }
+  function folhaAberta() { var f = $('folhaReportar'); return f && !f.hidden; }
+  function fecharReportar() {
+    var f = $('folhaReportar'); if (f) f.hidden = true;
+    if (respondida && elProx) { elProx.disabled = false; elProx.setAttribute('aria-disabled', 'false'); }
+  }
+  function abrirReportar() {
+    if (!respondida) return;
+    $('folhaReportar').hidden = false;
+    elProx.disabled = true;
+    elProx.setAttribute('aria-disabled', 'true');
+  }
   function reportar(motivo) {
     if (!atual) return;
     var id = trilha(atual.id);
@@ -1716,6 +1768,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     var b = ev.target.closest ? ev.target.closest('.alt') : null; if (b) responder(+b.getAttribute('data-i'));
   });
   function avancar() {
+    if (folhaAberta()) return;
     if (acaoProx && tela === 'tJogo') { var f = acaoProx; acaoProx = null; f(); return; }
     if (respondida && tela === 'tJogo') proxima(true);
   }
@@ -1723,7 +1776,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   elProx.addEventListener('click', function (ev) { if (ev.detail === 0) avancar(); });
   /* depois de responder, um toque em qualquer ponto da pergunta também avança (menos na explicação e no botão) */
   elJogo.addEventListener('pointerup', function (ev) {
-    if (!respondida || tela !== 'tJogo' || tDown < tResp + 400 || movido(ev)) return;
+    if (folhaAberta() || !respondida || tela !== 'tJogo' || tDown < tResp + 400 || movido(ev)) return;
     if (ev.target.closest && ev.target.closest('.veredito, .pe')) return;
     proxima(true);
   });
@@ -1746,8 +1799,9 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   $('oRapido').addEventListener('change', function () { S.rapido = this.checked; prox = null; salvarLocal(); });
   $('oRevisar').addEventListener('change', function () { S.revisar = this.checked; prox = null; salvarLocal(); });
   $('oVibra').addEventListener('change', function () { S.vibra = this.checked; salvarLocal(); if (S.vibra) { vibrar(true); soltarHap(); } });
-  $('bReportar').addEventListener('click', function () { if (respondida) $('folhaReportar').hidden = false; });
+  $('bReportar').addEventListener('click', abrirReportar);
   $('bReportarFecha').addEventListener('click', fecharReportar);
+  $('bReportarCancela').addEventListener('click', fecharReportar);
   $('folhaReportar').addEventListener('click', function (ev) {
     var b = ev.target.closest ? ev.target.closest('[data-motivo]') : null;
     if (!b) return;
@@ -1764,11 +1818,10 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   $('bPremiumLim').addEventListener('click', function () { abrirPremium('tLim'); });
   $('bPremVoltar').addEventListener('click', function () { if (premiumVolta === 'tLim') telaLimite(); else { mostrar('tMat'); } });
   $('bPremInteresse').addEventListener('click', function () {
-    if (premiumAvisado) return;
-    premiumAvisado = true;
+    if (jaQuerPremium()) return;
+    try { localStorage.setItem('cq1-premium', '1'); } catch (e) {}
     metrica('premium/interesse');
-    $('premObrigado').hidden = false;
-    $('bPremInteresse').hidden = true;
+    pintarPremium();
   });
   document.addEventListener('keydown', function (ev) {
     if (tela !== 'tJogo' || ev.metaKey || ev.ctrlKey || ev.altKey) return;
