@@ -1,0 +1,8 @@
+{
+  "appId": "br.com.brunoquinta.quizconcursos",
+  "appName": "Quiz Concursos",
+  "webDir": "www",
+  "android": {
+    "path": "android"
+  }
+}

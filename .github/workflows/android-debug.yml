@@ -1,0 +1,48 @@
+name: APK debug
+
+on:
+  push:
+    branches:
+      - cursor/rodada-20-e-apk-ca3e
+      - main
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Aceitar licenças e garantir o SDK
+        run: |
+          test -n "$ANDROID_SDK_ROOT"
+          echo "sdk.dir=${ANDROID_SDK_ROOT}" > android/local.properties
+          yes | "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+
+      - run: npm ci
+
+      - run: npm run cap:sync
+
+      - name: Montar o APK de debug
+        working-directory: android
+        run: |
+          export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quiz-concursos-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
