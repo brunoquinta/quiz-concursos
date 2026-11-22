@@ -61,14 +61,23 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 @keyframes pulsoOuro { 0%, 100% { box-shadow: inset 0 0 0 0 rgba(232,180,35,0); background-color: var(--glass-2); } 50% { box-shadow: inset 0 0 0 3px #e8b423; background-color: rgba(232,180,35,.34); } }
 #bMaterias.pulso { animation: pulsoOuro 1.5s ease-in-out 2; }
 .trofeus { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.trofeu { border-radius: 18px; background: var(--glass); border: 1px solid var(--edge); box-shadow: inset 0 1px 0 var(--edge); padding: 8px 4px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 86px; }
-.trofeu svg { width: 46px; height: 46px; }
-.trofeu span { font-size: 10px; font-weight: 700; line-height: 1.15; text-align: center; }
-.trofeu.bloqueado { filter: grayscale(1); opacity: .42; }
-.trofeu.novo svg { filter: drop-shadow(0 0 6px rgba(232,180,35,.9)); }
-.trofeu-det { border-radius: var(--r); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
-.trofeu-det b { font-size: 16px; }
-.trofeu-prog { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); }
+.trofeu { border-radius: 18px; background: var(--glass); border: 1px solid var(--edge); box-shadow: inset 0 1px 0 var(--edge); padding: 8px 4px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 92px; }
+.trofeu svg { width: 52px; height: 52px; }
+.trofeu span { font-size: 11px; font-weight: 700; line-height: 1.15; text-align: center; }
+.trofeu.bloqueado { opacity: .62; }
+.trofeu.novo svg { filter: drop-shadow(0 0 6px rgba(255,214,110,.9)); }
+.trofeu-modal { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 24px; touch-action: none; overscroll-behavior: none; }
+.trofeu-fundo { position: absolute; inset: 0; border: 0; background: rgba(12,18,36,.46); -webkit-backdrop-filter: blur(12px) saturate(140%); backdrop-filter: blur(12px) saturate(140%); }
+.trofeu-cartao { position: relative; z-index: 1; width: min(320px, 100%); border-radius: 28px; padding: 26px 22px 22px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; background: var(--glass-2); }
+.trofeu-cartao.entra { animation: trofeuEntra .22s ease; }
+@keyframes trofeuEntra { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+.trofeu-x { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; border-radius: 50%; background: var(--glass); border: 1px solid var(--edge); font-size: 20px; line-height: 1; color: var(--muted); }
+.trofeu-icone svg { width: 120px; height: 120px; }
+.trofeu-cartao b { font-size: 22px; letter-spacing: -0.02em; line-height: 1.2; }
+.trofeu-cartao .aviso { max-width: 28ch; }
+.trofeu-barra { height: 8px; width: 100%; border-radius: 99px; background: var(--hair); overflow: hidden; }
+.trofeu-barra i { display: block; height: 100%; width: 0; border-radius: 99px; }
+.trofeu-prog { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 15px; }
 .redondo svg { width: 20px; height: 20px; }
 .redondo:active { transform: scale(.94); }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
@@ -163,7 +172,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
 .barra { height: 6px; border-radius: 99px; background: var(--hair); overflow: hidden; margin-top: 14px; }
 .barra i { display: block; height: 100%; width: 0; background: var(--accent); }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(84px + env(safe-area-inset-top, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; max-width: calc(100% - 32px); text-align: center; z-index: 5; pointer-events: none; }
-@media (prefers-reduced-motion: reduce) { .tog::after { transition: none; } .redondo:active, .btn:active { transform: none; } #bMaterias.pulso { animation: none; } .trofeu.novo svg { filter: none; } }
+@media (prefers-reduced-motion: reduce) { .tog::after { transition: none; } .redondo:active, .btn:active { transform: none; } #bMaterias.pulso { animation: none; } .trofeu.novo svg { filter: none; } .trofeu-cartao.entra { animation: none; } }
 </style>
 
 <div class="fundo" aria-hidden="true"></div>
@@ -228,11 +237,6 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       </div>
       <div class="rot">Troféus</div>
       <div class="trofeus" id="trofeus"></div>
-      <div class="trofeu-det vidro" id="trofeuDet" hidden>
-        <b id="trofeuNome"></b>
-        <span class="aviso" id="trofeuCrit"></span>
-        <span class="trofeu-prog" id="trofeuProg"></span>
-      </div>
       <p class="aviso centro" id="nuvem">Verificando onde o progresso será guardado…</p>
       <div class="dev" id="dev" hidden>
         <b>Só para testes</b>
@@ -283,6 +287,17 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   </section>
 </div>
 <div class="toast" id="toast" hidden role="status"></div>
+<div class="trofeu-modal" id="trofeuModal" hidden>
+  <button type="button" class="trofeu-fundo" id="trofeuFundo" aria-label="Fechar troféu"></button>
+  <div class="trofeu-cartao vidro" role="dialog" aria-modal="true" aria-labelledby="trofeuNome">
+    <button type="button" class="trofeu-x" id="trofeuFechar" aria-label="Fechar">×</button>
+    <div class="trofeu-icone" id="trofeuIcone"></div>
+    <b id="trofeuNome"></b>
+    <span class="aviso" id="trofeuCrit"></span>
+    <div class="trofeu-barra" id="trofeuBarraBox"><i id="trofeuBarra"></i></div>
+    <span class="trofeu-prog" id="trofeuProg"></span>
+  </div>
+</div>
 
 <script>
 (function () {
@@ -926,21 +941,40 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   var VOLUMES = [50, 100, 200, 300, 400, 500, 750, 1000, 2000, 5000];
   var SEQUENCIAS = [5, 10, 20, 50];
   var DIAS_SEG = [3, 7, 30, 100];
-  var GLIFO = {
-    vol: '<path d="M22 40h20M22 33h20M22 26h14" fill="none" stroke="#5c3b08" stroke-width="3" stroke-linecap="round"/>',
-    seq: '<path d="M36 16l-10 16h8l-4 16 16-20h-8z" fill="#5c3b08"/>',
-    dia: '<rect x="22" y="22" width="20" height="18" rx="3" fill="none" stroke="#5c3b08" stroke-width="2.4"/><path d="M22 28h20M28 20v4M36 20v4" stroke="#5c3b08" stroke-width="2.2" stroke-linecap="round"/>',
-    mira: '<circle cx="32" cy="32" r="7" fill="none" stroke="#5c3b08" stroke-width="2.4"/><path d="M32 20v5M32 39v5M20 32h5M39 32h5" stroke="#5c3b08" stroke-width="2.4" stroke-linecap="round"/>',
-    livro: '<path d="M20 22h24v20H20zM32 22v20" fill="none" stroke="#5c3b08" stroke-width="2.4"/>',
-    monte: '<path d="M16 42l12-18 6 9 5-7 9 16z" fill="#5c3b08"/>',
-    sobe: '<path d="M32 44V24M23 32l9-9 9 9" fill="none" stroke="#5c3b08" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>',
-    relogio: '<circle cx="32" cy="32" r="9" fill="none" stroke="#5c3b08" stroke-width="2.4"/><path d="M32 26v7l4 3" fill="none" stroke="#5c3b08" stroke-width="2.4" stroke-linecap="round"/>',
-    sol: '<circle cx="32" cy="32" r="5" fill="#5c3b08"/><path d="M32 18v4M32 42v4M18 32h4M42 32h4M22 22l3 3M39 39l3 3M42 22l-3 3M25 39l-3 3" stroke="#5c3b08" stroke-width="2" stroke-linecap="round"/>',
-    lua: '<path d="M36 20a12 12 0 1 0 0 24 9 9 0 0 1 0-24z" fill="#5c3b08"/>',
-    flag: '<path d="M26 44V20h16l-3 6 3 6H26" fill="none" stroke="#5c3b08" stroke-width="2.4" stroke-linejoin="round"/>',
-    play: '<path d="M27 22v20l16-10z" fill="#5c3b08"/>',
-    grade: '<path d="M20 20h10v10H20zM34 20h10v10H34zM20 34h10v10H20zM34 34h10v10H34z" fill="#5c3b08"/>'
-  };
+  /* arco-íris por dificuldade: 0 vermelho … 1 violeta */
+  var ARCO = [
+    { l: '#ffe4e4', m: '#f25555', d: '#9d1d1d', i: '#6e1212' },
+    { l: '#ffe6cf', m: '#f47a22', d: '#a6440c', i: '#7a3008' },
+    { l: '#fff4c8', m: '#e6b31a', d: '#8d6a09', i: '#664c06' },
+    { l: '#dcf6e6', m: '#2eae5c', d: '#146b34', i: '#0c4c24' },
+    { l: '#d9e9ff', m: '#2f7ef0', d: '#154a9c', i: '#0d326c' },
+    { l: '#e0dcff', m: '#5b4ae0', d: '#32268f', i: '#221966' },
+    { l: '#f3d9ff', m: '#9b3ad6', d: '#641890', i: '#451064' }
+  ];
+  var CINZA = { l: '#f5f7fb', m: '#c5cad3', d: '#8d939e', i: '#525864' };
+  function hexRgb(h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
+  function rgbHex(c) { return '#' + c.map(function (n) { var s = Math.max(0, Math.min(255, Math.round(n))).toString(16); return s.length < 2 ? '0' + s : s; }).join(''); }
+  function corEm(t) {
+    var n = ARCO.length - 1, x = Math.max(0, Math.min(1, t)) * n, i = Math.min(n - 1, Math.floor(x)), f = x - i, a = ARCO[i], b = ARCO[i + 1];
+    function mix(p, q) { var A = hexRgb(p), B = hexRgb(q); return rgbHex([A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f, A[2] + (B[2] - A[2]) * f]); }
+    return { l: mix(a.l, b.l), m: mix(a.m, b.m), d: mix(a.d, b.d), i: mix(a.i, b.i) };
+  }
+  function simboloTrofeu(tipo, ink, extra) {
+    var s = 'stroke="' + ink + '"', f = 'fill="' + ink + '"';
+    if (tipo === 'broto') return '<path d="M32 44V32" fill="none" ' + s + ' stroke-width="2.4" stroke-linecap="round"/><path d="M32 36C27 36 21 31 20 24c6 .4 10 4 12 12z" ' + f + '/><path d="M32 31c5-.4 11-5 12-12-6 .6-10 5-12 12z" ' + f + '/><path d="M26 44h12" fill="none" ' + s + ' stroke-width="2.2" stroke-linecap="round"/>';
+    if (tipo === 'chama') return '<path d="M32 13c2 5 7 7 7 13.5C39 33 36 39 32 39s-7-6-7-12.5c0-3 1.2-5 2.6-6.8.8 2 2 2.6 2.8 0 .4-2.8.8-5 1.6-6.7z" fill="#fff" ' + s + ' stroke-width="1.25" stroke-linejoin="round"/><path d="M32 27c.9 2 2.2 2.8 2.2 5a2.2 2.2 0 0 1-4.4 0c0-2.2 1-3.2 2.2-5z" ' + f + '/>';
+    if (tipo === 'cal') return '<rect x="20" y="20" width="24" height="18" rx="3.5" fill="none" ' + s + ' stroke-width="2.2"/><path d="M20 26.5h24M26.5 17.5v5M37.5 17.5v5" fill="none" ' + s + ' stroke-width="2.2" stroke-linecap="round"/><circle cx="27" cy="32.5" r="1.55" ' + f + '/><circle cx="32" cy="32.5" r="1.55" ' + f + '/><circle cx="37" cy="32.5" r="1.55" ' + f + '/>';
+    if (tipo === 'alvo') return '<circle cx="32" cy="29" r="10.2" fill="none" ' + s + ' stroke-width="2.5"/><circle cx="32" cy="29" r="5.5" fill="none" ' + s + ' stroke-width="2.5"/><circle cx="32" cy="29" r="2.15" ' + f + '/>';
+    if (tipo === 'livro') return '<path d="M32 22.5c-3.2 0-7.2-1.4-12-1.4v15.6c4.8 0 8.8 1.4 12 1.4s7.2-1.4 12-1.4V21.1c-4.8 0-8.8 1.4-12 1.4z" ' + f + '/><path d="M32 22.5v15.6M25 26.2h5M25 30h5M39 26.2h-5M39 30h-5" fill="none" stroke="#fff" stroke-opacity=".62" stroke-width="1.15" stroke-linecap="round"/>';
+    if (tipo === 'estrela') return '<path d="M32 15.5l3.4 7.6 8.2.8-6.2 5.4 1.9 8.1L32 33.4l-7.3 4 1.9-8.1-6.2-5.4 8.2-.8z" ' + f + '/>';
+    if (tipo === 'monte') return '<path d="M13 43l13-20 6.2 9.2L39 18l13 25z" ' + f + '/><path d="M39 18l5.2 8.2h-9.2z" fill="#fff" opacity=".8"/>';
+    if (tipo === 'giro') return '<path d="M41.5 24.2A10 10 0 1 0 43 34.5" fill="none" ' + s + ' stroke-width="2.6" stroke-linecap="round"/><path d="M41.2 17.8l1.4 7.4-7.3.2" fill="none" ' + s + ' stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+    if (tipo === 'raio') return '<path d="M36 15L23.5 32h8.2L28 46l15.5-18.5H34.2z" ' + f + '/>';
+    if (tipo === 'sol') return '<path d="M19 37h26" fill="none" ' + s + ' stroke-width="2.2" stroke-linecap="round"/><path d="M23.5 37a8.5 8.5 0 0 1 17 0z" ' + f + '/><path d="M32 18.5v5.2M22.5 24.2l3.6 3.4M41.5 24.2l-3.6 3.4" fill="none" ' + s + ' stroke-width="2.1" stroke-linecap="round"/>';
+    if (tipo === 'lua') return '<path d="M38 19.5a12 12 0 1 0 .2 22.2 9.2 9.2 0 0 1-.2-22.2z" ' + f + '/><path d="M22.5 22.2l.8 1.8 1.9.2-1.4 1.2.4 1.8-1.7-1-1.7 1 .4-1.8-1.4-1.2 1.9-.2z" fill="#fff" opacity=".85"/>';
+    var n = String(extra == null ? '' : extra), fs = n.length >= 4 ? 11 : (n.length === 3 ? 13.5 : 16);
+    return '<circle cx="32" cy="29" r="13.2" fill="none" ' + s + ' stroke-width="1.35" opacity=".4"/><text x="32" y="34" text-anchor="middle" font-family="ui-sans-serif,system-ui,sans-serif" font-size="' + fs + '" font-weight="800" ' + f + '">' + n + '</text>';
+  }
   function novoTrofeus() {
     return { v: 1, ganhos: {}, vistos: {}, novos: {}, mat: {}, viu: {}, n3: {}, niv3: 0, rec: 0, ritmo: 0, rodada: 0, naRodada: 0, melhorRodada: 0, dias: 0, ultimoDia: '', volOk: 0, matOk: 0 };
   }
@@ -1070,45 +1104,55 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     else salvarTrofeus();
     atualizarMenuTrofeu();
   }
-  function svgTrofeu(glifo, ganho, uid) {
-    var a = ganho ? '#fff6d2' : '#e4e7ee', b = ganho ? '#e2ae2e' : '#b7bcc8', c = ganho ? '#a87410' : '#8e94a3';
+  function svgTrofeu(item, ganho, uid) {
+    var c = ganho ? corEm(item.tom) : CINZA;
+    var g = 'g' + uid, r = 'r' + uid, s = 's' + uid, k = 'k' + uid;
     return '<svg viewBox="0 0 64 64" aria-hidden="true"><defs>' +
-      '<linearGradient id="o' + uid + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + a + '"/><stop offset=".45" stop-color="' + b + '"/><stop offset="1" stop-color="' + c + '"/></linearGradient>' +
-      '<linearGradient id="v' + uid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".8"/><stop offset=".55" stop-color="#fff" stop-opacity=".05"/></linearGradient>' +
-      '</defs><circle cx="32" cy="36" r="22" fill="rgba(80,50,0,.18)"/><circle cx="32" cy="32" r="22" fill="url(#o' + uid + ')" stroke="rgba(255,255,255,.7)" stroke-width="1.2"/>' +
-      '<ellipse cx="32" cy="22" rx="14" ry="7" fill="url(#v' + uid + ')"/>' + glifo + '</svg>';
+      '<radialGradient id="' + g + '" cx="32%" cy="26%" r="78%"><stop offset="0" stop-color="' + c.l + '"/><stop offset=".46" stop-color="' + c.m + '"/><stop offset="1" stop-color="' + c.d + '"/></radialGradient>' +
+      '<linearGradient id="' + r + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".42" stop-color="#fff" stop-opacity=".12"/><stop offset="1" stop-color="#fff" stop-opacity=".7"/></linearGradient>' +
+      '<linearGradient id="' + s + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".92"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></linearGradient>' +
+      '<clipPath id="' + k + '"><circle cx="32" cy="30" r="20.2"/></clipPath></defs>' +
+      '<ellipse cx="32" cy="56" rx="14" ry="3.1" fill="' + c.d + '" opacity=".3"/>' +
+      '<circle cx="32" cy="30" r="22" fill="url(#' + g + ')"/>' +
+      '<g clip-path="url(#' + k + ')"><ellipse cx="32" cy="47" rx="18" ry="11" fill="' + c.d + '" opacity=".38"/></g>' +
+      '<circle cx="32" cy="30" r="20.5" fill="none" stroke="url(#' + r + ')" stroke-width="2.4"/>' +
+      '<ellipse cx="26" cy="17.5" rx="10" ry="5" fill="url(#' + s + ')" transform="rotate(-16 26 17.5)"/>' +
+      '<circle cx="22.5" cy="16.5" r="1.6" fill="#fff"/>' +
+      simboloTrofeu(item.tipo, c.i, item.extra) + '</svg>';
   }
   function catalogoTrofeus() {
     var itens = [];
-    function add(id, nome, curto, crit, glifo, atual, meta) {
-      itens.push({ id: id, nome: nome, curto: curto, crit: crit, glifo: glifo, atual: atual || 0, meta: meta });
+    function add(id, nome, curto, crit, tipo, tom, atual, meta, extra) {
+      itens.push({ id: id, nome: nome, curto: curto, crit: crit, tipo: tipo, tom: tom, atual: atual || 0, meta: meta, extra: extra });
     }
-    add('pri-1', 'Primeira resposta', 'Começo', 'Responda a primeira pergunta.', GLIFO.flag, S.total > 0 ? 1 : 0, 1);
-    add('pri-rodada', 'Rodada fechada', 'Rodada', 'Complete uma rodada de ' + LIM + ' perguntas.', GLIFO.play, T.ganhos['pri-rodada'] ? LIM : (T.naRodada || 0), LIM);
-    add('pri-anuncio', 'Anúncio visto', 'Anúncio', 'Assista a um anúncio até a recompensa.', GLIFO.play, (T.ganhos['pri-anuncio'] || S.bonus > 0) ? 1 : 0, 1);
-    VOLUMES.forEach(function (n) { add('vol-' + n, n.toLocaleString('pt-BR') + ' respostas', String(n), 'Responda ' + n.toLocaleString('pt-BR') + ' perguntas.', GLIFO.vol, S.total, n); });
-    SEQUENCIAS.forEach(function (n) { add('seq-' + n, n + ' seguidas', n + '✓', 'Acerte ' + n + ' perguntas seguidas.', GLIFO.seq, Math.max(S.seq || 0, S.melhor || 0), n); });
-    DIAS_SEG.forEach(function (n) { add('dia-' + n, n + ' dias seguidos', n + 'd', 'Use o quiz por ' + n + ' dias seguidos.', GLIFO.dia, T.dias || 0, n); });
-    add('pre-90', 'Rodada afiada', '90%', 'Feche uma rodada de ' + LIM + ' com pelo menos 90% de acertos.', GLIFO.mira, Math.min(T.melhorRodada || 0, 18), 18);
-    add('pre-100', 'Rodada perfeita', '20/20', 'Acerte as ' + LIM + ' perguntas de uma rodada.', GLIFO.mira, T.melhorRodada || 0, LIM);
+    add('pri-1', 'Primeira resposta', 'Começo', 'Responda a primeira pergunta.', 'broto', 0, S.total > 0 ? 1 : 0, 1);
+    add('pri-rodada', 'Rodada fechada', 'Rodada', 'Complete uma rodada de ' + LIM + ' perguntas.', 'broto', 0.16, T.ganhos['pri-rodada'] ? LIM : (T.naRodada || 0), LIM);
+    add('pri-anuncio', 'Anúncio visto', 'Anúncio', 'Assista a um anúncio até a recompensa.', 'broto', 0.33, (T.ganhos['pri-anuncio'] || S.bonus > 0) ? 1 : 0, 1);
+    var tonsVol = [0, 0.12, 0.24, 0.36, 0.46, 0.56, 0.64, 0.67, 0.84, 1];
+    VOLUMES.forEach(function (n, i) { add('vol-' + n, n.toLocaleString('pt-BR') + ' respostas', String(n), 'Responda ' + n.toLocaleString('pt-BR') + ' perguntas.', 'vol', tonsVol[i], S.total, n, n); });
+    var tonsSeq = [0.16, 0.36, 0.56, 0.84];
+    SEQUENCIAS.forEach(function (n, i) { add('seq-' + n, n + ' seguidas', n + '✓', 'Acerte ' + n + ' perguntas seguidas.', 'chama', tonsSeq[i], Math.max(S.seq || 0, S.melhor || 0), n); });
+    var tonsDia = [0.16, 0.36, 0.67, 1];
+    DIAS_SEG.forEach(function (n, i) { add('dia-' + n, n + ' dias seguidos', n + 'd', 'Use o quiz por ' + n + ' dias seguidos.', 'cal', tonsDia[i], T.dias || 0, n); });
+    add('pre-90', 'Rodada afiada', '90%', 'Feche uma rodada de ' + LIM + ' com pelo menos 90% de acertos.', 'alvo', 0.56, Math.min(T.melhorRodada || 0, 18), 18);
+    add('pre-100', 'Rodada perfeita', '20/20', 'Acerte as ' + LIM + ' perguntas de uma rodada.', 'alvo', 0.84, T.melhorRodada || 0, LIM);
     if (MAN) MAN.disciplinas.forEach(function (d) {
-      add('mat-' + d.codigo, '100 em ' + d.nome, '100', 'Acerte 100 perguntas de ' + d.nome + '.', GLIFO.livro, T.mat[d.codigo] || 0, 100);
+      add('mat-' + d.codigo, '100 em ' + d.nome, '100', 'Acerte 100 perguntas de ' + d.nome + '.', 'livro', 0.67, T.mat[d.codigo] || 0, 100);
     });
     var vistas = MAN ? MAN.disciplinas.filter(function (d) { return T.viu[d.codigo]; }).length : 0;
     var totalMat = MAN ? MAN.disciplinas.length : 0;
-    add('polivalente', 'Polivalente', 'Todas', 'Responda pelo menos uma pergunta de cada matéria.', GLIFO.grade, vistas, totalMat || 1);
-    add('niv3-25', 'Nível três', 'N3', 'Acerte 25 perguntas de nível 3.', GLIFO.monte, T.niv3 || 0, 25);
-    add('rec-10', 'Recuperação', '10', 'Acerte 10 vezes uma pergunta que você tinha errado.', GLIFO.sobe, T.rec || 0, 10);
-    add('rec-50', 'Virada', '50', 'Acerte 50 vezes uma pergunta que você tinha errado.', GLIFO.sobe, T.rec || 0, 50);
-    add('rit-10', 'Relâmpago', '15s', 'Acerte 10 seguidas, cada uma em menos de 15 segundos.', GLIFO.relogio, T.ritmo || 0, 10);
-    add('madruga', 'Madrugador', 'Manhã', 'Responda uma pergunta antes das 7h.', GLIFO.sol, T.ganhos.madruga ? 1 : 0, 1);
-    add('coruja', 'Coruja', 'Noite', 'Responda uma pergunta depois das 23h.', GLIFO.lua, T.ganhos.coruja ? 1 : 0, 1);
+    add('polivalente', 'Polivalente', 'Todas', 'Responda pelo menos uma pergunta de cada matéria.', 'estrela', 0.5, vistas, totalMat || 1);
+    add('niv3-25', 'Nível três', 'N3', 'Acerte 25 perguntas de nível 3.', 'monte', 0.84, T.niv3 || 0, 25);
+    add('rec-10', 'Recuperação', '10', 'Acerte 10 vezes uma pergunta que você tinha errado.', 'giro', 0.36, T.rec || 0, 10);
+    add('rec-50', 'Virada', '50', 'Acerte 50 vezes uma pergunta que você tinha errado.', 'giro', 0.67, T.rec || 0, 50);
+    add('rit-10', 'Relâmpago', '15s', 'Acerte 10 seguidas, cada uma em menos de 15 segundos.', 'raio', 0.56, T.ritmo || 0, 10);
+    add('madruga', 'Madrugador', 'Manhã', 'Responda uma pergunta antes das 7h.', 'sol', 0.16, T.ganhos.madruga ? 1 : 0, 1);
+    add('coruja', 'Coruja', 'Noite', 'Responda uma pergunta depois das 23h.', 'lua', 0.16, T.ganhos.coruja ? 1 : 0, 1);
     return itens;
   }
   function renderTrofeus() {
     if (!T) carregarTrofeus();
     var box = $('trofeus'); if (!box) return;
-    var det = $('trofeuDet');
     if (T.novos) Object.keys(T.novos).forEach(function (id) { T.vistos[id] = T.vistos[id] || 0; });
     box.textContent = '';
     catalogoTrofeus().forEach(function (item, i) {
@@ -1118,7 +1162,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       btn.className = 'trofeu' + (ganho ? ' ganho' : ' bloqueado') + (ganho && !T.vistos[item.id] ? ' novo' : '');
       btn.setAttribute('aria-label', item.nome);
       var ico = document.createElement('span');
-      ico.innerHTML = svgTrofeu(item.glifo, ganho, i);
+      ico.innerHTML = svgTrofeu(item, ganho, 'g' + i);
       var nome = document.createElement('span');
       nome.textContent = item.curto;
       btn.appendChild(ico); btn.appendChild(nome);
@@ -1129,16 +1173,47 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     T.novos = {};
     salvarTrofeus();
     atualizarMenuTrofeu();
-    if (det && det.hidden) { /* permanece fechado até o toque */ }
   }
+  var focoTrofeu = null;
   function detalheTrofeu(item) {
-    var det = $('trofeuDet'); if (!det) return;
-    det.hidden = false;
+    var modal = $('trofeuModal'); if (!modal) return;
+    focoTrofeu = document.activeElement;
+    var ganho = !!T.ganhos[item.id];
+    $('trofeuIcone').innerHTML = svgTrofeu(item, ganho, 'm');
     $('trofeuNome').textContent = item.nome;
     $('trofeuCrit').textContent = item.crit;
-    if (T.ganhos[item.id]) $('trofeuProg').textContent = 'Conquistado em ' + dataCurta(T.ganhos[item.id]);
-    else $('trofeuProg').textContent = Math.min(item.atual, item.meta).toLocaleString('pt-BR') + '/' + item.meta.toLocaleString('pt-BR');
+    var barra = $('trofeuBarraBox'), atual = Math.max(0, Math.min(item.atual || 0, item.meta || 0));
+    var cor = corEm(item.tom);
+    if (ganho) {
+      barra.hidden = true;
+      $('trofeuProg').textContent = 'Conquistado em ' + dataCurta(T.ganhos[item.id]);
+      $('trofeuProg').style.color = cor.m;
+    } else {
+      barra.hidden = false;
+      $('trofeuBarra').style.width = (item.meta ? (100 * atual / item.meta) : 0) + '%';
+      $('trofeuBarra').style.background = cor.m;
+      $('trofeuProg').textContent = atual.toLocaleString('pt-BR') + '/' + item.meta.toLocaleString('pt-BR');
+      $('trofeuProg').style.color = cor.d;
+    }
+    modal.hidden = false;
+    var cartao = modal.querySelector('.trofeu-cartao');
+    cartao.classList.remove('entra');
+    void cartao.offsetWidth;
+    cartao.classList.add('entra');
+    var x = $('trofeuFechar');
+    if (x && x.focus) x.focus({ preventScroll: true });
   }
+  function fecharTrofeu() {
+    var modal = $('trofeuModal');
+    if (!modal || modal.hidden) return;
+    modal.hidden = true;
+    if (focoTrofeu && focoTrofeu.isConnected && focoTrofeu.focus) focoTrofeu.focus({ preventScroll: true });
+    focoTrofeu = null;
+  }
+  $('trofeuFundo').addEventListener('click', fecharTrofeu);
+  $('trofeuFechar').addEventListener('click', fecharTrofeu);
+  $('trofeuModal').addEventListener('wheel', function (ev) { ev.preventDefault(); }, { passive: false });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') fecharTrofeu(); });
   function concederTrofeuTeste() {
     if (!T) carregarTrofeus();
     var lista = catalogoTrofeus();
@@ -1159,7 +1234,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     salvarTrofeus();
     atualizarMenuTrofeu();
     if (tela === 'tMat') renderTrofeus();
-    var det = $('trofeuDet'); if (det) det.hidden = true;
+    fecharTrofeu();
   }
 
   function telaMaterias() {
