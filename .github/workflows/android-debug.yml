@@ -23,14 +23,23 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: android-actions/setup-android@v3
+      - name: Aceitar licenças e garantir o SDK
+        run: |
+          test -n "$ANDROID_SDK_ROOT"
+          echo "sdk.dir=${ANDROID_SDK_ROOT}" > android/local.properties
+          yes | "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
 
       - run: npm ci
 
       - run: npm run cap:sync
 
-      - run: chmod +x ./gradlew && ./gradlew assembleDebug --no-daemon
+      - name: Montar o APK de debug
         working-directory: android
+        run: |
+          export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:
