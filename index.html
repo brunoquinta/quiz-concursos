@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'"><meta name="referrer" content="no-referrer"><title>Quiz de Concursos Piloto</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="icon" href="favicon.ico" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png"><style>body{margin:0}[hidden]{display:none!important}</style></head><body>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://gc.zgo.at; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.goatcounter.com; img-src 'self' data: https://*.goatcounter.com; object-src 'none'; base-uri 'self'; form-action 'none'"><meta name="referrer" content="no-referrer"><title>Quiz de Concursos Piloto</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="icon" href="favicon.ico" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png"><style>body{margin:0}[hidden]{display:none!important}</style></head><body>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Layout: uma tela de app, coluna única centrada de até 560px. Cápsula de vidro no topo (botão | 3 números | botão),
@@ -254,6 +254,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
         </div>
         <span class="aviso">"Zerar hoje" libera de novo as 20 do dia. "Começar do zero" também apaga histórico, níveis e sequências. Este quadro sai na versão oficial.</span>
       </div>
+      <p class="aviso centro" id="avisoMetrica" hidden>Coletamos apenas estatísticas anônimas de uso, sem cookies e sem dados pessoais.</p>
       <p class="aviso centro">Piloto v4 · banco v1.1</p>
     </div>
     <div class="pe"><button class="btn" id="bVoltar" type="button">Voltar ao quiz</button></div>
@@ -309,6 +310,47 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   /* IDs oficiais de teste do Google. Não trocar por ID de produção neste piloto. */
   var ADMOB_APP = 'ca-app-pub-3940256099942544~3347511713';
   var ADMOB_REWARD = 'ca-app-pub-3940256099942544/5224354917';
+  /* Código do site no GoatCounter: só o subdomínio, sem .goatcounter.com. Vazio = não coleta nada. */
+  var GC_CODIGO = '';
+  var filaMetrica = [];
+  function trilha(s) { return String(s == null ? '' : s).replace(/[^a-z0-9_-]/gi, '').slice(0, 40); }
+  function privacidadePedeSilencio() {
+    var dnt = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+    if (dnt === '1' || dnt === 'yes') return true;
+    return navigator.globalPrivacyControl === true;
+  }
+  function codigoGoat() {
+    var c = String(GC_CODIGO || '').trim().toLowerCase();
+    return /^[a-z0-9-]{2,40}$/.test(c) ? c : '';
+  }
+  function metricaLigada() { return !!(codigoGoat() && !ehLocal() && !privacidadePedeSilencio()); }
+  function ligarGoatCounter() {
+    var aviso = $('avisoMetrica');
+    if (!metricaLigada()) { if (aviso) aviso.hidden = true; return; }
+    if (aviso) aviso.hidden = false;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://gc.zgo.at/count.js';
+    s.setAttribute('data-goatcounter', 'https://' + codigoGoat() + '.goatcounter.com/count');
+    s.setAttribute('data-goatcounter-settings', '{"no_onload":true}');
+    s.addEventListener('load', soltarMetricas);
+    s.addEventListener('error', function () { filaMetrica = []; });
+    document.head.appendChild(s);
+  }
+  function metrica(caminho) {
+    if (!metricaLigada()) return;
+    caminho = String(caminho || '');
+    if (caminho.length > 80 || !/^[a-z0-9_-]+(?:\/[a-z0-9_-]+)*$/i.test(caminho)) return;
+    try {
+      if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: caminho, event: true });
+      else if (filaMetrica.length < 30) filaMetrica.push(caminho);
+    } catch (e) {}
+  }
+  function soltarMetricas() {
+    if (!window.goatcounter || !window.goatcounter.count) return;
+    var fila = filaMetrica; filaMetrica = [];
+    fila.forEach(function (c) { try { window.goatcounter.count({ path: c, event: true }); } catch (e) {} });
+  }
   var $ = function (id) { return document.getElementById(id); };
   var LETRAS = ['A', 'B', 'C', 'D'];
   function hoje() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -491,6 +533,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       if (!aceitarPacote(disc, nome, linhas)) {
         pacoteOk[nome] = 0;
         console.warn('Pacote recusado: ' + nome);
+        metrica('pacote/erro');
         aposBaixa();
         return;
       }
@@ -512,6 +555,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       }
       delete pedidos[nome];
       console.warn('Não foi possível baixar o pacote ' + nome);
+      metrica('pacote/erro');
       aposBaixa();
     });
   }
@@ -791,6 +835,8 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     salvarLocal(d);
     descarregar();
     avaliarResposta(q, ok, tinha, tMostrada ? tResp - tMostrada : -1);
+    metrica('resp/' + trilha(d) + '/' + (ok ? 'acerto' : 'erro'));
+    if (!ok) metrica('errada/' + trilha(q.id));
     preparar();
   }
   function nivel(d, ok) {
@@ -841,6 +887,8 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     geracaoAd++;
     /* a marca fica até a recompensa; recarregar no meio recomeça do zero e avisa */
     marcarAnuncio();
+    anuncioAvisado = false;
+    metrica('anuncio/inicio');
     if (nativo()) { anuncioNativo(geracaoAd); return; }
     $('adTitulo').textContent = 'Espaço do anúncio';
     $('adTexto').textContent = 'Simulação do piloto. Ao fim da contagem, mais ' + BONUS + ' perguntas ficam liberadas.';
@@ -870,6 +918,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     $('bAdOk').disabled = true;
     salvarLocal(); descarregar();
     toast(BONUS + ' perguntas liberadas');
+    metrica('anuncio/fim');
     avaliarAnuncio();
     proxima(true);
   }
@@ -886,6 +935,13 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     $('adBarra').style.width = '0%';
     $('bAdOk').disabled = false;
     $('bAdOk').textContent = rotulo || 'Tentar de novo';
+    if (rotulo === 'Assistir de novo') metricaInterrompido();
+  }
+  var anuncioAvisado = false;
+  function metricaInterrompido() {
+    if (anuncioAvisado || premioDesteAnuncio) return;
+    anuncioAvisado = true;
+    metrica('anuncio/interrompido');
   }
   function garantirAdMob() {
     var admob = pluginAdMob();
@@ -998,7 +1054,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
     if (!ok || T.ganhos[id]) return false;
     T.ganhos[id] = Date.now();
     T.novos[id] = 1;
-    if (animar) pulsarMenu();
+    if (animar) { pulsarMenu(); metrica('trofeu/' + trilha(id)); }
     else atualizarMenuTrofeu();
     return true;
   }
@@ -1097,6 +1153,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       checarTrofeu('pri-rodada', true, true);
       checarTrofeu('pre-90', ac >= 18, true);
       checarTrofeu('pre-100', ac >= LIM, true);
+      metrica('rodada');
     }
     salvarTrofeus();
     atualizarMenuTrofeu();
@@ -1510,7 +1567,11 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       if (tela === 'tAd') { tickAd(); if (!tAd && Date.now() < adFim) tAd = setInterval(tickAd, 250); }
     }
   });
-  window.addEventListener('pagehide', descarregar);
+  window.addEventListener('pagehide', function () {
+    if (tela === 'tAd') metricaInterrompido();
+    soltarMetricas();
+    descarregar();
+  });
   /* painel e atalho de teste só no próprio computador; na versão publicada não existem */
   function ehLocal() {
     var h = location.hostname;
@@ -1549,7 +1610,7 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
       if (geracao !== epoca) return;
       tentMan++;
       if (tentMan < TENTATIVAS) setTimeout(function () { if (geracao === epoca) carregarManifest(); }, 400 * tentMan);
-      else mostrarErroCarga();
+      else { metrica('pacote/erro'); mostrarErroCarga(); }
     });
   }
 
@@ -1557,6 +1618,8 @@ h1 { font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 4px 0 0
   aoFalharGravacao = function () { falhaGravacao = true; avisoGravacao(); };
   if (falhaGravacao) avisoGravacao();
   avisoAd = anuncioMarcado();
+  ligarGoatCounter();
+  metrica('abertura');
   carregarTrofeus();
   registrarDia(false);
   atualizarMenuTrofeu();
